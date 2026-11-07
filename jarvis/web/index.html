@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jarvis">
+<meta name="theme-color" content="#06110A">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/icon.png">
+<link rel="apple-touch-icon" href="/static/icon.png">
+<link rel="stylesheet" href="/static/style.css">
+<title>Jarvis</title>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div id="shell" class="shell">
+  <!-- ============ BARRE LATÉRALE ============ -->
+  <aside id="sidebar" class="sidebar glass">
+    <div class="brand">
+      <div class="orb mini" id="brandOrb"><span></span></div>
+      <div class="brand-txt"><b>Jarvis</b><small id="brandSub">local · privé</small></div>
+      <button class="icon-btn only-mobile" id="closeSide" aria-label="Fermer">✕</button>
+    </div>
+    <button class="btn-new" id="newTask"><span>＋</span> Nouvelle tâche <kbd>⌘N</kbd></button>
+    <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Rechercher…" autocomplete="off"></label>
+    <nav class="tasks" id="taskList" aria-label="Tâches"></nav>
+    <div class="side-foot">
+      <button class="side-link" id="openSettings"><span>⚙︎</span> Réglages</button>
+      <div class="conn" id="conn"><i></i><span>Connexion…</span></div>
+    </div>
+  </aside>
+
+  <!-- ============ CONTENU ============ -->
+  <main class="main">
+    <header class="topbar" id="topbar">
+      <button class="icon-btn only-mobile" id="openSide" aria-label="Menu">☰</button>
+      <div class="top-title">
+        <h1 id="taskTitle" title="Double-clic pour renommer">Jarvis</h1>
+        <span class="pill" id="taskStatus" hidden></span>
+      </div>
+      <div class="top-actions">
+        <button class="chip-btn danger" id="btnStop" hidden>⏹ Arrêter</button>
+        <button class="chip-btn boost" id="btnBoost" hidden title="Confier la suite de cette tâche au renfort en ligne gratuit, plus puissant">⚡ Renfort</button>
+        <button class="chip-btn" id="btnUndo" hidden title="Restaurer les fichiers modifiés par cette tâche">↶ Annuler les modifications</button>
+        <button class="icon-btn" id="btnDelete" hidden title="Supprimer la conversation">🗑</button>
+      </div>
+    </header>
+
+    <!-- Accueil -->
+    <section id="home" class="home">
+      <div class="hero">
+        <div class="orb big" id="heroOrb"><span></span><b></b></div>
+        <h2 id="greet">Bonsoir.</h2>
+        <p class="sub">Que puis-je faire pour toi ? Je peux mener plusieurs tâches en même temps.</p>
+      </div>
+      <div class="suggest" id="suggest"></div>
+      <div class="status-row" id="statusRow"></div>
+    </section>
+
+    <!-- Conversation -->
+    <section id="thread" class="thread" hidden>
+      <div class="plan glass" id="plan" hidden></div>
+      <div class="subs" id="subs" hidden></div>
+      <div class="msgs" id="msgs"></div>
+    </section>
+
+    <!-- Composeur -->
+    <form class="composer glass" id="composer" autocomplete="off">
+      <div class="composer-hint" id="composerHint" hidden></div>
+      <div class="attachments" id="attachments" hidden></div>
+      <textarea id="input" rows="1" placeholder="Demande n'importe quoi à Jarvis…" aria-label="Message"></textarea>
+      <div class="composer-row">
+        <div class="composer-left">
+          <button type="button" class="icon-btn" id="btnAttach" title="Joindre des fichiers (ou glisse-les ici)">📎</button>
+          <input type="file" id="fileInput" multiple hidden>
+          <button type="button" class="icon-btn" id="btnMic" title="Dicter">🎙</button>
+          <button type="button" class="icon-btn research-btn" id="btnResearch" aria-pressed="false"
+                  title="Recherche approfondie : plusieurs recherches web, lecture des pages, rapport avec sources">🔎 Recherche</button>
+          <span class="model-chip" id="modelChip"></span>
+        </div>
+        <button type="submit" class="send" id="btnSend" aria-label="Envoyer">↑</button>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- Glisser-déposer -->
+<div class="dropzone" id="dropzone" hidden>
+  <div class="drop-card glass"><div class="orb mini center"><span></span></div><b>Dépose tes fichiers</b>
+    <small>PDF, Word, Excel, PowerPoint, images, Pixelmator, Photoshop, exports Canva… jusqu'à 4 Go chacun</small></div>
+</div>
+
+<!-- Pile des confirmations -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- Connexion -->
+<div class="modal" id="login" hidden>
+  <div class="sheet glass small">
+    <div class="orb mini center"><span></span></div>
+    <h3>Connexion à Jarvis</h3>
+    <p class="muted">Sur ton Mac : Réglages › Accès à distance › « Copier le lien de connexion », ou Terminal : <code>jarvis token</code>.</p>
+    <input id="tokenInput" type="password" placeholder="Jeton secret" autocomplete="current-password">
+    <p class="err" id="loginErr"></p>
+    <button class="btn-primary" id="loginGo">Se connecter</button>
+  </div>
+</div>
+
+<!-- Réglages -->
+<div class="modal" id="settings" hidden>
+  <div class="sheet glass wide">
+    <header class="sheet-head">
+      <h3>Réglages</h3>
+      <button class="icon-btn" data-close aria-label="Fermer">✕</button>
+    </header>
+    <div class="tabs" id="setTabs">
+      <button data-tab="general" class="on">Général</button>
+      <button data-tab="security">Sécurité</button>
+      <button data-tab="cloud">Renfort</button>
+      <button data-tab="remote">Accès à distance</button>
+      <button data-tab="notif">Voix & notifications</button>
+      <button data-tab="memory">Mémoire</button>
+      <button data-tab="diag">Diagnostic</button>
+    </div>
+    <div class="tab-body" id="setBody"></div>
+  </div>
+</div>
+
+<!-- Journal -->
+<div class="modal" id="auditModal" hidden>
+  <div class="sheet glass wide">
+    <header class="sheet-head"><h3>Journal de sécurité</h3><button class="icon-btn" data-close>✕</button></header>
+    <div class="audit" id="auditList"></div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

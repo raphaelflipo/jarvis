@@ -1,0 +1,27 @@
+#!/bin/bash
+# « Installer Jarvis » : prépare une copie propre de l'installateur puis l'ouvre dans le Terminal,
+# pour que tu voies la progression et puisses saisir ton mot de passe (Homebrew).
+APP="$(cd "$(dirname "$0")/../.." && pwd)"
+RES="$APP/Contents/Resources"
+TMP="$HOME/.jarvis-installer"
+
+answer=$(osascript <<'EOF'
+try
+  set r to display dialog "Installer Jarvis, ton agent IA local et gratuit ?" & return & return & ¬
+    "• Durée : 20 à 45 minutes (téléchargement des modèles IA, 6 à 25 Go)" & return & ¬
+    "• Ton mot de passe de session sera demandé une fois" & return & ¬
+    "• Rien n'est payant, tout reste sur ton Mac" buttons {"Annuler", "Installer"} default button "Installer" ¬
+    with title "Jarvis" with icon note
+  return button returned of r
+on error
+  return "Annuler"
+end try
+EOF
+)
+[[ "$answer" == "Installer" ]] || exit 0
+
+rm -rf "$TMP" && mkdir -p "$TMP"
+cp -R "$RES/payload/." "$TMP/"
+xattr -dr com.apple.quarantine "$TMP" 2>/dev/null
+chmod +x "$TMP/install.sh" "$TMP/install.command" "$TMP/uninstall.sh"
+open -a Terminal "$TMP/install.command"
