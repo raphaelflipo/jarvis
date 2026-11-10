@@ -1,0 +1,68 @@
+JARVIS POUR MAC — ÉDITION COMPLÈTE, PRÉVERSION 3.2
+
+Ce téléchargement est un installateur avec les sources, pas une application
+préinstallée contenant les modèles. Il ne contient aucun compte, clé ni modèle.
+
+PRÉREQUIS
+- Mac Apple Silicon (M1 ou plus récent), macOS 14 ou plus récent.
+- 16 Go de mémoire au minimum ; les gros modèles demandent davantage.
+- Au moins 30 Go de stockage libre et une connexion pour les dépendances
+  et le modèle choisi. La durée et la taille varient selon ce modèle.
+- Outils de ligne de commande Apple et Homebrew (https://brew.sh).
+  S'ils sont absents, l'installateur indique quoi installer puis s'arrête.
+  Relancer après leur installation. Aucun mot de passe n'est demandé par Jarvis.
+
+INSTALLATION
+1. Décompresser l'archive.
+2. Ouvrir « Installer Jarvis.app » et lire le récapitulatif.
+3. L'installation se déroule dans Terminal. Les options supplémentaires
+   sont facultatives et refusées par défaut.
+
+Cette préversion n'est pas signée avec un certificat Developer ID et n'est
+pas notariée. macOS peut donc empêcher son ouverture. L'installateur ne
+supprime pas la quarantaine et ne désactive aucune protection du système.
+Consulter l'aide officielle Apple sur l'ouverture d'apps d'un développeur
+identifié avant de décider de poursuivre. Alternative pour développeurs :
+inspecter les sources dans Installer Jarvis.app/Contents/Resources/payload,
+puis lancer « bash install.sh --check » et, si souhaité, « bash install.sh ».
+
+Le mode --check (ou --dry-run) n'installe rien, ne télécharge rien et n'écrit
+pas de configuration. Il contrôle le système et le contenu de l'archive.
+Les empreintes du contenu sont dans MANIFEST.sha256 ; l'empreinte du ZIP
+est publiée à côté du téléchargement. Elles contrôlent l'intégrité,
+pas l'identité du développeur ni l'absence de vulnérabilités. Le contenu du
+ZIP est reproductible ; les versions des dépendances téléchargées à
+l'installation peuvent évoluer.
+
+OÙ SONT LES FICHIERS ?
+- ~/.jarvis : logiciel, configuration, historique et journaux privés.
+- ~/JarvisWorkspace : fichiers de travail de l'agent.
+- /Applications/Jarvis.app si accessible, sinon ~/Applications/Jarvis.app.
+- ~/.local/bin/jarvis : commande Terminal.
+
+Un moteur Ollama déjà actif est réutilisé. L'installateur ne l'arrête pas.
+Les outils supplémentaires et le modèle de recherche restent facultatifs.
+Les comptes GitHub/Firebase et l’accès distant ne sont pas activés par
+le programme d’installation. Aucun achat ni abonnement n’est activé.
+
+UTILISATION ET LIMITES
+Le modèle principal s'exécute sur le Mac. Les recherches web et les renforts
+en ligne facultatifs nécessitent Internet ; toutes les fonctions ne sont
+pas hors ligne. Les outils système restent propres à macOS. Les versions
+mobiles et Windows sont décrites séparément sur la page du projet.
+
+L'agent peut modifier des fichiers : commencer dans un dossier de test et
+lire ses demandes d'accord. Les modèles ne sont pas infaillibles.
+Le site et le dépôt indiquent les essais réellement effectués pour cette
+préversion ; une archive construite n'atteste pas un essai sur chaque Mac.
+
+DÉSINSTALLATION
+Lancer ~/.jarvis/uninstall.sh. Le script conserve JarvisWorkspace et les
+modèles partagés d'Ollama. Il demande séparément avant d'effacer les données
+personnelles de Jarvis. Ne jamais supprimer ~/.ollama sans vérifier les
+autres logiciels qui utilisent ces modèles.
+
+Sources et licence MIT : https://github.com/raphaelflipo/jarvis
+
+Cette édition de base installe un modèle de conversation. Vision, dictée,
+MLX et création d’images demandent une préparation supplémentaire.

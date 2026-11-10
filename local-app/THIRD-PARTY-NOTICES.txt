@@ -1,0 +1,83 @@
+JARVIS LOCAL — THIRD-PARTY SOFTWARE NOTICES
+Release: 1.0.0-beta.1
+
+Jarvis application code is licensed separately under the MIT License in LICENSE.
+Third-party components retain their own copyrights and licenses. Keep this file
+and the complete license and notice files in vendor/ when redistributing this
+application, including modified copies. No endorsement by the upstream projects
+is implied.
+
+1. TRANSFORMERS.JS
+
+Project: Hugging Face Transformers.js
+Distribution: @huggingface/transformers 3.8.1
+Source: https://github.com/huggingface/transformers.js
+Package: https://www.npmjs.com/package/@huggingface/transformers/v/3.8.1
+License: Apache License, Version 2.0
+Complete license: vendor/LICENSE-transformers
+Distributed file: vendor/transformers.min.js
+
+This file is an unmodified copy of dist/transformers.min.js from the official
+npm package. It bundles Transformers.js, the Jinja implementation below, and
+ONNX Runtime JavaScript components. The package source map identifies these
+bundled packages; development dependencies and Node-only runtimes are not
+distributed with Jarvis Local.
+
+2. HUGGING FACE JINJA
+
+Project: @huggingface/jinja
+Source: https://github.com/huggingface/huggingface.js
+Copyright (c) 2023 Hugging Face
+License: MIT
+Complete license: vendor/LICENSE-jinja
+Distributed within: vendor/transformers.min.js
+
+The license file is retained verbatim from the official @huggingface/jinja npm
+package. This component renders model chat templates in the browser. The npm
+dependency installed for inspection is 0.5.11; the exact revision embedded in
+the prebuilt Transformers.js bundle is governed by that upstream distribution,
+not inferred from the locally resolved dependency version.
+
+3. ONNX RUNTIME
+
+Project: Microsoft ONNX Runtime / ONNX Runtime Web
+Source: https://github.com/microsoft/onnxruntime
+Copyright (c) Microsoft Corporation
+License: MIT, plus the upstream third-party notices
+Complete license: vendor/LICENSE-onnxruntime
+Upstream notices: vendor/ThirdPartyNotices-onnxruntime.txt
+Upstream readme: vendor/README-onnxruntime.md
+Distributed files:
+  vendor/ort-wasm-simd-threaded.jsep.mjs
+  vendor/ort-wasm-simd-threaded.jsep.wasm
+  JavaScript components inside vendor/transformers.min.js
+
+The .mjs and .wasm files are unmodified copies supplied in the official
+@huggingface/transformers 3.8.1 distribution. Their bytes also match the
+onnxruntime-web 1.22.0-dev.20250409-89f8206ba4 npm distribution. The embedded
+ONNX Runtime Web header identifies that same development release. The locally
+installed onnxruntime-common 1.21.0 dependency is not a reliable version label
+for the distributed WebAssembly binary.
+
+Upstream third-party notices are preserved verbatim, including their original
+scope and wording; this index does not replace or narrow those notices.
+
+4. MODEL FILES DOWNLOADED SEPARATELY
+
+Model weights and tokenizer assets are not included in the Jarvis Local ZIP.
+The application downloads selected, pinned model revisions from Hugging Face.
+Their licensing, provenance and model documentation are published separately:
+
+  https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct
+  https://huggingface.co/onnx-community/Qwen3-0.6B-ONNX
+  Original Qwen model: https://huggingface.co/Qwen/Qwen3-0.6B
+
+The exact download revisions are recorded in models.js. Consult the model's
+own license before separately redistributing its files or publishing changes.
+
+5. DISTRIBUTED VENDOR FILE INTEGRITY
+
+The release ZIP contains SHA256SUMS.txt covering all packaged component files,
+including the complete license texts. The ZIP's separate .sha256 file checks
+the archive as a whole. These hashes establish file consistency, not an
+upstream cryptographic signature or a security certification.

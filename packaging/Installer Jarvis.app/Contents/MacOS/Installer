@@ -1,27 +1,28 @@
 #!/bin/bash
-# « Installer Jarvis » : prépare une copie propre de l'installateur puis l'ouvre dans le Terminal,
-# pour que tu voies la progression et puisses saisir ton mot de passe (Homebrew).
+# Launch the inspected payload in Terminal without altering Gatekeeper metadata.
+set -euo pipefail
 APP="$(cd "$(dirname "$0")/../.." && pwd)"
-RES="$APP/Contents/Resources"
-TMP="$HOME/.jarvis-installer"
-
-answer=$(osascript <<'EOF'
+PAYLOAD="$APP/Contents/Resources/payload"
+[[ -f "$PAYLOAD/install.sh" && -f "$PAYLOAD/MANIFEST.sha256" ]] || exit 1
+(cd "$PAYLOAD" && /usr/bin/shasum -a 256 -c MANIFEST.sha256 >/dev/null) || {
+  /usr/bin/osascript -e 'display alert "Archive Jarvis incomplète" message "Les fichiers ne correspondent pas aux empreintes du paquet. Téléchargez une nouvelle copie depuis le dépôt officiel."'
+  exit 1
+}
+answer=$(/usr/bin/osascript <<'APPLESCRIPT'
 try
-  set r to display dialog "Installer Jarvis, ton agent IA local et gratuit ?" & return & return & ¬
-    "• Durée : 20 à 45 minutes (téléchargement des modèles IA, 6 à 25 Go)" & return & ¬
-    "• Ton mot de passe de session sera demandé une fois" & return & ¬
-    "• Rien n'est payant, tout reste sur ton Mac" buttons {"Annuler", "Installer"} default button "Installer" ¬
-    with title "Jarvis" with icon note
+  set r to display dialog "Installer la préversion de Jarvis pour Mac Apple Silicon ?" & return & return & ¬
+    "• macOS 14+, 16 Go de RAM, au moins 30 Go libres" & return & ¬
+    "• Téléchargement de dépendances et d’un modèle local" & return & ¬
+    "• Les intégrations supplémentaires sont facultatives" & return & ¬
+    "• Aucun abonnement ou achat activé" & return & return & ¬
+    "Terminal montrera les étapes. Jarvis ne demande ni conserve votre mot de passe." buttons {"Annuler", "Installer"} default button "Annuler" ¬
+    with title "Jarvis — préversion macOS" with icon note
   return button returned of r
 on error
   return "Annuler"
 end try
-EOF
+APPLESCRIPT
 )
 [[ "$answer" == "Installer" ]] || exit 0
-
-rm -rf "$TMP" && mkdir -p "$TMP"
-cp -R "$RES/payload/." "$TMP/"
-xattr -dr com.apple.quarantine "$TMP" 2>/dev/null
-chmod +x "$TMP/install.sh" "$TMP/install.command" "$TMP/uninstall.sh"
-open -a Terminal "$TMP/install.command"
+# No copy to a fixed home path, no removal of quarantine, no privilege change.
+/usr/bin/open -a Terminal "$PAYLOAD/install.command"

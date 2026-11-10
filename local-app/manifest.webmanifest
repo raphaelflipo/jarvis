@@ -1,0 +1,10 @@
+{
+  "id": "./", "name": "Jarvis Local", "short_name": "Jarvis",
+  "description": "Votre assistant de conversation, directement sur votre appareil.",
+  "lang": "fr", "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#edf4e8", "theme_color": "#edf4e8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
