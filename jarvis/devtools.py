@@ -239,7 +239,7 @@ def apply_patch(patch: str, cwd: str = ""):
     if not patch.endswith("\n"):
         patch += "\n"
     files = _patch_files(patch, root)
-    locks = [path_lock(f) for f in files]
+    locks = [path_lock(f) for f in sorted(set(files), key=lambda p: str(p.resolve()))]
     for lk in locks:
         lk.acquire()
     try:

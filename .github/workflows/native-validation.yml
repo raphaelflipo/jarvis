@@ -1,12 +1,19 @@
 name: Native builds and local inference
 on:
   workflow_dispatch:
+    inputs:
+      stage_release:
+        description: Copier les paquets vérifiés dans la release brouillon
+        type: boolean
+        default: false
   push:
     branches: ['release/native-finalization-*', 'codex/native-finalization-*']
 permissions:
   contents: read
 jobs:
   windows:
+    permissions:
+      contents: write
     runs-on: windows-latest
     timeout-minutes: 35
     steps:
@@ -49,6 +56,15 @@ jobs:
             offline.json
             signature.txt
             sha256.txt
+      - name: Stage verified Windows installer
+        if: inputs.stage_release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Copy-Item online.json windows-online.json
+          Copy-Item offline.json windows-offline.json
+          gh release upload v3.3.0-rc.1 native/windows/dist/*Setup.exe windows-online.json windows-offline.json signature.txt --clobber
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 40

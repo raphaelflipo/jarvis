@@ -8,6 +8,7 @@ import os
 import plistlib
 import shutil
 import subprocess
+import tempfile
 import urllib.request
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -19,7 +20,7 @@ SOURCES={
 def run(*args,**kwargs): subprocess.run(args,check=True,**kwargs)
 def build(cache:Path,output:Path):
     output.mkdir(parents=True,exist_ok=True)
-    stage=output/'macOS';stage.mkdir(exist_ok=True)
+    stage=Path(tempfile.mkdtemp(prefix='jarvis-macos-'))
     app=stage/'Jarvis.app'
     if app.exists(): shutil.rmtree(app)
     resources=app/'Contents/Resources';binary=app/'Contents/MacOS'
@@ -59,7 +60,8 @@ def build(cache:Path,output:Path):
     (resources/'BUILD.json').write_text(json.dumps({'version':VERSION,'commit':commit,'architecture':'arm64','dependencies':SOURCES,'signature':'ad-hoc; not notarized'},indent=2))
     # Retire uniquement les métadonnées Finder incompatibles avec la signature du paquet.
     for attribute in ('com.apple.FinderInfo','com.apple.ResourceFork'):
-        subprocess.run(['xattr','-dr',attribute,str(app)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        subprocess.run(['/usr/bin/xattr','-d',attribute,str(app)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        subprocess.run(['/usr/bin/xattr','-dr',attribute,str(app)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     # Signe les exécutables et bibliothèques imbriqués avant le conteneur.
     signed=set()
     for path in sorted(app.rglob('*'),key=lambda p:len(p.parts),reverse=True):

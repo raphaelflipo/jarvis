@@ -36,3 +36,11 @@ La publication est une **préversion publique**, pas une version stable certifi�
 Les textes d’accueil et de réglages ont été précisés. Les identifiants HTML, les clés de stockage, les modèles et le moteur d’inférence sont conservés. Le cache de l’interface porte un nouveau numéro de version ; les fichiers de modèles déjà téléchargés ne sont pas supprimés.
 
 Les 11 tests automatisés de l’application web passent. Les fichiers HTML, les liens, le manifeste, les politiques de scripts et la correspondance entre les sources et la copie du site sont contrôlés. Les archives sont reconstruites avec leurs empreintes. Aucun nouveau test d’inférence, d’installation sur téléphone ou de rendu navigateur n’a été réalisé pour cette maintenance. Les observations du 10 novembre ci-dessus restent celles de la bêta 1.
+
+## Nouvelle validation native · 3.3.0-rc.1
+
+Les sections précédentes décrivent les versions bêta et leurs environnements à la date indiquée. Elles ne constituent pas le bilan de la RC.
+
+Le 12 novembre, les nouveaux conteneurs Windows et iOS ont exécuté un vrai modèle SmolLM2, puis l'ont rechargé depuis le cache lors d'une deuxième ouverture, avec 40 messages conservés. Windows : installation de l'EXE sur le runner Windows de GitHub Actions ; requêtes extérieures bloquées durant le second test. iOS : WKWebView dans le simulateur iPhone 18 Pro, iOS 27.2, chargement cache seul. Il ne s'agit pas d'un iPhone physique ni d'une distribution App Store.
+
+Les 12 tests JavaScript passent. Le serveur Mac passe 263 contrôles hors ligne (LLM simulé, intégrations HTTP/WebSocket réelles) ; les tests de régression additionnels vérifient le refus d'exécuter sans protection, les conflits d'annulation, les copies récupérables, la lecture bornée des pièces jointes et l'arrêt des surveillants. Les résultats Android et la vérification des paquets finaux sont consignés dans les notes de RC et le dossier de livraison.

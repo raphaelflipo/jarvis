@@ -22,7 +22,7 @@ class MacReleaseTests(unittest.TestCase):
         self.folder = Path(self.tmp.name)
         self.checkout = self.folder / "source"
         # A source fixture, never any user's ~/.jarvis directory.
-        shutil.copytree(ROOT, self.checkout, ignore=shutil.ignore_patterns(".git", "dist", ".venv", "__pycache__", "local-app"))
+        shutil.copytree(ROOT, self.checkout, ignore=shutil.ignore_patterns(".git", "dist", ".venv", "__pycache__", "local-app", ".audit-work", "native"))
 
     def archive(self):
         return packager.build(self.checkout, self.folder / "out", "3.2.0-beta.1")

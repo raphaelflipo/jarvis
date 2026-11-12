@@ -19,7 +19,7 @@ import tempfile
 import zipfile
 
 
-VERSION = "1.0.0-beta.2"
+VERSION = "3.3.0-rc.1"
 REPOSITORY = Path(__file__).resolve().parents[1]
 SOURCE = REPOSITORY / "local-app"
 ARCHIVE_ROOT = f"Jarvis-Local-{VERSION}"

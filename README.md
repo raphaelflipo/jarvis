@@ -1,69 +1,43 @@
 # Jarvis
 
-Un projet d’assistant personnel local de Raphaël Flipo. Deux éditions, avec des périmètres différents, sont disponibles en préversion.
+Assistant personnel local de Raphaël Flipo. **3.3.0-rc.1 est une version de validation**, avec des paquets natifs et des niveaux de vérification distincts selon les plateformes.
 
-**[Ouvrir et installer Jarvis Local](https://raphaelflipo.github.io/jarvis/app/)** · **[Téléchargements](https://github.com/raphaelflipo/jarvis/releases)** · **[Présentation](https://raphaelflipo.github.io/jarvis/)**
+**[Téléchargements et statuts](https://raphaelflipo.github.io/jarvis/)** · **[Releases](https://github.com/raphaelflipo/jarvis/releases)** · **[Accès web complémentaire](https://raphaelflipo.github.io/jarvis/app/)**
 
-| | Jarvis Local · bêta 2 | Jarvis pour macOS · 3.2 bêta 2 |
+| Édition | Installation | Fonctions |
 |---|---|---|
-| Installation | Application web installable | Installateur avec sources, compilation sur le Mac |
-| Systèmes visés | iOS, Android, macOS, Windows, navigateur récent | Mac Apple Silicon, macOS 14+ |
-| Calcul de l’IA | Directement sur l’appareil, WASM | Sur le Mac, Ollama ; MLX facultatif |
-| Téléphone sans ordinateur | Oui | L’ancienne interface distante nécessite le Mac |
-| Fonctions | Conversation texte, reformulation, idées | Agent, outils, fichiers, documents et intégrations Mac |
-| Modèles | SmolLM2 135M ou Qwen3 0.6B | qwen3:8b par défaut ; autres modèles configurables |
-| Frais | Aucun abonnement, pas de compte | Aucun abonnement obligatoire ; cloud facultatif |
+| Mac Apple Silicon | Application autonome dans un DMG ; macOS 14+ | Conversation, agent, fichiers, documents, outils système ; Ollama intégré, MLX facultatif si déjà configuré |
+| Windows x64 | Installateur EXE ; Windows 10+ | Conversation locale avec modèle WebAssembly ; aucun ordinateur distant |
+| Android | APK de production signé ; Android 10+, WebView récent | Conversation locale ; interface et moteur embarqués ; premier téléchargement du modèle nécessaire |
+| iOS/iPadOS | Projet natif et archive pour appareil physique préparés ; iOS 17+ | Conversation locale testée sur simulateur ; **pas de distribution publique iPhone active** |
 
-## Jarvis Local : téléphone et ordinateur
+Les trois nouvelles éditions de conversation conservent les fonctions de Jarvis Local. Elles ne fournissent pas les outils système de l'agent Mac. Aucun compte ni abonnement n'est nécessaire. Les deux modèles proposés sont petits : SmolLM2 135M (~140 Mo, surtout anglais) et Qwen3 0.6B (~628 Mo, mieux adapté au français). La qualité, la mémoire nécessaire et les performances varient selon l'appareil. Un minimum de 4 Go de RAM est conseillé pour commencer ; davantage pour Qwen3. Il ne s'agit pas d'une certification de chaque téléphone.
 
-1. Ouvrir **https://raphaelflipo.github.io/jarvis/app/**.
-2. Installer depuis le navigateur. Sur iPhone/iPad : Safari → Partager → Sur l’écran d’accueil. Sur Android/Windows : Chrome ou Edge → Installer l’application. Sur Mac : Safari → Ajouter au Dock, ou Chrome/Edge.
-3. Ouvrir l’application installée et télécharger un modèle : environ 140 Mo pour SmolLM2 (surtout anglais), ou 628 Mo pour Qwen (plus adapté au français), plus environ 23 Mo de moteur.
-4. Une fois « Prêt hors ligne » affiché, l’application et le modèle sont conservés pour une utilisation sans réseau. Après fermeture, recharger le modèle depuis les fichiers locaux.
+## Installer et ouvrir
 
-Cette édition fonctionne **sans ordinateur distant et sans serveur d’IA**. Les messages restent sur l’appareil. Le premier téléchargement contacte GitHub Pages et Hugging Face. Les données du navigateur peuvent être retirées en cas de manque de stockage.
+Consulter la page de téléchargement pour connaître le statut du fichier avant de l'installer.
 
-Le modèle et le contexte sont petits pour limiter la mémoire utilisée. La qualité et la vitesse varient ; tous les téléphones ne peuvent pas faire tourner tous les modèles. C’est une bêta conversationnelle : elle ne contrôle pas les autres applications, n’ouvre pas de documents joints et ne remplace pas les outils de l’agent Mac.
+- **Mac** : ouvrir le DMG, glisser Jarvis dans Applications puis l'ouvrir. Le menu Jarvis → Installer le modèle local propose le téléchargement initial. Aucun Homebrew, Python externe ou commande de compilation n'est requis. Le paquet est signé ad hoc, **non notarié**, et ne bénéficie pas d'un certificat Developer ID ; macOS peut bloquer l'ouverture. Ne pas désactiver Gatekeeper ni supprimer la quarantaine. Intel n'est pas pris en charge par ce paquet.
+- **Windows** : ouvrir l'EXE et suivre l'assistant, puis choisir un modèle dans Jarvis. Le paquet n'a pas de signature Authenticode ; les avertissements sur un PC personnel restent à évaluer. Les essais d'installation et de réouverture sont effectués sur un runner Windows de GitHub Actions.
+- **Android** : télécharger l'APK depuis la release, autoriser son installation depuis le navigateur choisi puis ouvrir Jarvis. Cette autorisation peut être retirée ensuite. Télécharger un modèle dans Jarvis. Les essais sur émulateur et les limites sur appareil physique sont détaillés dans le bilan de release.
+- **iPhone/iPad** : aucun IPA public installable n'est annoncé. Les moyens de signature et le canal de distribution doivent être configurés. L'accès web reste disponible séparément ; il ne remplace pas une application iOS distribuée.
 
-Il s’agit d’une **application web installable**, pas d’un APK, IPA, EXE ou d’une publication sur les boutiques Apple/Google. [Guide complet et confidentialité](local-app/README.md) · [Tests effectivement réalisés](local-app/VERIFICATION.md).
+## Stockage, données et permissions
 
-## Jarvis pour Mac : agent et outils
+Les conversations sont conservées sur l'appareil. Les nouveaux conteneurs utilisent un profil local persistant. Les 40 derniers messages sont conservés ; seuls les 12 derniers, avec une limite de longueur, sont transmis au modèle local. Les réglages permettent d'effacer la conversation et les modèles en cache. Une désinstallation ou le nettoyage du stockage peut supprimer ces données.
 
-Télécharger l’archive macOS depuis les [préversions publiques](https://github.com/raphaelflipo/jarvis/releases), la décompresser et lire la notice avant d’ouvrir `Installer Jarvis.app`. Le logiciel est compilé sur votre Mac ; l’archive ne contient ni modèle, ni compte, ni clé.
+Sur Mac, les profils existants dans `~/.jarvis` sont conservés. Ne pas utiliser l'ancien installateur avec compilation pour remplacer le paquet autonome. Les outils peuvent modifier des fichiers ; autoriser uniquement les dossiers de travail nécessaires et vérifier les demandes sensibles. Le shell protégé refuse de s'exécuter si son bac à sable est indisponible. L'annulation garde les fichiers modifiés depuis par l'utilisateur et conserve des copies récupérables.
 
-Prérequis : **Apple Silicon, macOS 14+, 16 Go de RAM, 30 Go d’espace libre**, connexion Internet, outils de ligne de commande Apple et Homebrew. Si un prérequis manque, l’installateur s’arrête en l’expliquant. Il ne demande pas de mot de passe, ne retire pas la quarantaine et ne désactive aucune protection.
+Le premier téléchargement des applications contacte GitHub ; les modèles de conversation viennent de Hugging Face, et ceux de l'agent Mac d'Ollama. Ces services voient les informations réseau habituelles, dont l'adresse IP, mais ne reçoivent pas les conversations locales. Les outils web, services externes ou renforts cloud de l'agent Mac nécessitent Internet et leur propre configuration ; ne pas les confondre avec une conversation hors ligne. Les fournisseurs, prompts fonctionnels, identifiants et licences nécessaires sont conservés.
 
-L’installateur est **sans certificat Developer ID ni notarisation Apple** : macOS peut bloquer son ouverture. Pour les développeurs qui inspectent les sources :
+## Vérifications et maintenance
 
-```sh
-git clone https://github.com/raphaelflipo/jarvis.git
-cd jarvis
-bash install.sh --check  # vérification sans installation ni écriture
-bash install.sh         # installation après lecture des prérequis
-```
+[Compilation et publication reproductibles](native/BUILD.md) · [Préparation iOS](native/ios/SUBMISSION.md) · [Historique des essais web](local-app/VERIFICATION.md).
 
-Le parcours de base installe Ollama et le modèle qwen3:8b, puis l’application native. Il réutilise un moteur Ollama déjà actif. Les services distants et les connexions GitHub/Firebase ne sont pas activés par l’installateur. Vision, dictée, MLX et création d’images nécessitent une préparation supplémentaire.
+Le workflow de validation Windows/Android compile les paquets, installe l'application Windows et exécute un vrai modèle local, puis recommence avec cache et historique conservés. Les nouveaux conteneurs embarquent leurs ressources et n'ouvrent pas simplement le site public. Les sources de l'interface restent dans `local-app/` ; `native/prepare.py` produit les copies natives.
 
-Les sources comprennent notamment un moteur de tâches, une interface AppKit/WebKit, des outils de fichiers et de documents, un navigateur Playwright, des intégrations Calendrier/Rappels et des options de recherche web. Leur disponibilité dépend des dépendances, des autorisations et du modèle. Les recherches web et les renforts cloud facultatifs utilisent Internet ; tous les usages de l’édition Mac ne sont donc pas hors ligne.
+La signature de distribution Apple, la notarisation Mac et la validation sur des téléphones physiques restent des critères distincts. Un fichier compilé ou une archive Xcode ne prouve pas une disponibilité publique. Les notes de chaque release indiquent précisément les environnements, résultats et blocages. Aucune dépense n'est engagée.
 
-L’agent peut modifier des fichiers. Commencer dans un dossier de test et vérifier les demandes d’accord. Ne pas lancer le backend macOS sous Windows en supposant ses outils et protections portables ; utiliser Jarvis Local sur Windows.
+## Licences
 
-[Notice Mac détaillée](packaging/MACOS-INSTALL.txt) · [Architecture du backend](docs/ARCHITECTURE.md).
-
-## Développement et vérifications
-
-```sh
-node --test tests/test_local_app.mjs
-python3 -m unittest discover -s tests -p test_packaging.py
-python3 tests/test_offline.py  # dépendances Python du backend nécessaires
-python3 packaging/build_local.py
-bash packaging/build.sh
-```
-
-Le site et l’application locale sont statiques, compatibles GitHub Pages. Le code de l’application installable est dans `local-app/`, celui du backend dans `jarvis/`. Les archives sont reproductibles et accompagnées d’empreintes SHA-256 ; les dépendances du programme d’installation Mac sont téléchargées lors de l’installation et peuvent évoluer.
-
-Les comptes rendus de préversion distinguent tests automatisés, compilation native et essais réels. Une compilation n’atteste pas une installation réussie sur un Mac vierge ; une vérification dans un navigateur de bureau ne prouve pas les performances d’un téléphone réel.
-
-## Licence
-
-Code Jarvis sous [licence MIT](LICENSE). Bibliothèques et modèles conservent leurs propres licences : voir [les notices](local-app/THIRD-PARTY-NOTICES.txt). Aucun modèle n’est redistribué dans les archives.
+Code Jarvis sous MIT, voir [LICENSE](LICENSE). Les dépendances et modèles conservent leurs propres licences et attributions : [notices de l'édition locale](local-app/THIRD-PARTY-NOTICES.txt). Le paquet Mac contient les licences des bibliothèques Python, d'Ollama et de Chromium. Les noms de fournisseurs dans les intégrations fonctionnelles ne sont pas des crédits de fabrication du projet.

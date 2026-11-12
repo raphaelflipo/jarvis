@@ -164,7 +164,7 @@ $('delete-model').addEventListener('click', async () => {
 });
 $('open-settings').addEventListener('click', () => $('settings-dialog').showModal());
 $('close-settings').addEventListener('click', () => $('settings-dialog').close());
-window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; $('install-button').hidden = false; });
+window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; $('install-button').hidden = Boolean(document.querySelector('meta[name="jarvis-native"]')); });
 $('install-button').addEventListener('click', async () => {
   if (installPrompt) { await installPrompt.prompt(); installPrompt = null; $('install-button').hidden = true; }
 });
@@ -172,6 +172,7 @@ window.addEventListener('appinstalled', () => { $('install-button').hidden = tru
 for (const name of ['online', 'offline']) window.addEventListener(name, () => { if (ready && !busy) readyStatus(); else if (!busy) status(navigator.onLine ? 'Modèle à charger' : 'Hors connexion · Chargez un modèle déjà téléchargé'); });
 if (document.querySelector('meta[name="jarvis-native"]')) {
   shellCached = true;
+  document.querySelector('.install-help').hidden = true;
 } else if ('serviceWorker' in navigator && window.isSecureContext) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).then(async registration => {
     await navigator.serviceWorker.ready;
