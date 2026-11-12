@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_VERSION = "3.2.0-beta.1"
+DEFAULT_VERSION = "3.2.0-beta.2"
 FIXED_DATE = (2026, 1, 1, 0, 0, 0)
 # Deliberate public-source allowlist. Add new runtime modules here when needed;
 # an untracked Python file must not become public just because of its extension.
@@ -48,7 +48,7 @@ def source_files(root: Path) -> dict[str, bytes]:
 
 def build(root: Path, output: Path, version: str) -> Path:
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?", version):
-        raise ValueError("Use a version such as 3.2.0-beta.1")
+        raise ValueError("Use a version such as 3.2.0-beta.2")
     payload = source_files(root)
     payload["VERSION"] = (version + "\n").encode()
     manifest = "".join(f"{hashlib.sha256(data).hexdigest()}  {name}\n"

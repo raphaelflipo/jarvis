@@ -21,12 +21,11 @@ PATCH_FILE = re.compile(r"^\+\+\+ (?:b/)?(\S+)", re.M)
 PATCH_OLD = re.compile(r"^--- (?:a/)?(\S+)", re.M)
 
 
-CODEX_HDR = re.compile(r"^\*\*\* (Add|Update|Delete) File: (.+?)\s*$|^\*\*\* Move to: (.+?)\s*$", re.M)
+STRUCTURED_PATCH_HEADER = re.compile(r"^\*\*\* (Add|Update|Delete) File: (.+?)\s*$|^\*\*\* Move to: (.+?)\s*$", re.M)
 
 
 def _rp(root: Path, f: str) -> Path:
-    """Chemin d'un fichier de patch. Erreur fréquente des modèles : cwd = « shop » ET chemins « shop/cart.py » →
-    on évite de créer un doublon shop/shop/ en reconnaissant le préfixe répété."""
+    """Résout un chemin de patch et corrige un préfixe de projet répété."""
     if f.startswith("/"):
         return Path(f)
     p = (root / f).resolve()
@@ -38,12 +37,12 @@ def _rp(root: Path, f: str) -> Path:
     return p
 
 
-def _is_codex(patch: str) -> bool:
-    """Format « *** Begin Patch / *** Update File: » (celui qu'utilisent gpt-oss et les agents d'OpenAI)."""
+def _is_structured_patch(patch: str) -> bool:
+    """Reconnaît les en-têtes du format de patch structuré."""
     return "*** Begin Patch" in patch or bool(re.search(r"^\*\*\* (Add|Update|Delete) File: ", patch, re.M))
 
 
-def _parse_codex_patch(patch: str) -> list[dict]:
+def _parse_structured_patch(patch: str) -> list[dict]:
     files, cur, hunk = [], None, None
     for ln in patch.splitlines():
         if ln.startswith("*** Begin Patch") or ln.startswith("*** End of File"):
@@ -86,8 +85,8 @@ def _parse_codex_patch(patch: str) -> list[dict]:
 
 def _patch_files(patch: str, root: Path) -> list[Path]:
     files = []
-    if _is_codex(patch):
-        for m in CODEX_HDR.finditer(patch):
+    if _is_structured_patch(patch):
+        for m in STRUCTURED_PATCH_HEADER.finditer(patch):
             f = (m.group(2) or m.group(3) or "").strip()
             if f:
                 p = _rp(root, f)
@@ -108,7 +107,7 @@ def _patch_files(patch: str, root: Path) -> list[Path]:
 
 
 def _parse_patch(patch: str) -> list[dict]:
-    """Découpe un unified diff en fichiers et blocs (tolérant aux défauts typiques des modèles IA)."""
+    """Analyse les fichiers et les blocs d’un diff unifié."""
     files, cur, hunk = [], None, None
     lines = patch.splitlines()
     for idx, ln in enumerate(lines):
@@ -177,7 +176,7 @@ def _nearest(lines: list[str], block: list[str], span: int = 12) -> str:
 
 def _fuzzy_apply(patch: str, root: Path) -> str:
     """Application tolérante : retrouve chaque bloc par son contenu (numéros de ligne approximatifs acceptés)."""
-    return _apply_parsed(_parse_codex_patch(patch) if _is_codex(patch) else _parse_patch(patch), root)
+    return _apply_parsed(_parse_structured_patch(patch) if _is_structured_patch(patch) else _parse_patch(patch), root)
 
 
 def _apply_parsed(parsed: list[dict], root: Path) -> str:
@@ -246,7 +245,7 @@ def apply_patch(patch: str, cwd: str = ""):
     try:
         for f in files:
             backup(f)
-        if _is_codex(patch):
+        if _is_structured_patch(patch):
             return _fuzzy_apply(patch, root).replace("en mode tolérant", "(format *** Begin Patch)")
         tries = [["git", "apply", "--whitespace=nowarn", "--recount", "-"],
                  ["git", "apply", "--whitespace=nowarn", "--recount", "-p0", "-"],

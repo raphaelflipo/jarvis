@@ -1,4 +1,4 @@
-# Jarvis Local · bêta 1
+# Jarvis Local · bêta 2
 
 Assistant de conversation autonome, gratuit et sans compte, pour navigateur récent sur macOS, Windows, iOS et Android. L’IA s’exécute sur **l’appareil qui ouvre l’application**. Aucun ordinateur distant, Ollama ou abonnement n’est nécessaire pour cette édition.
 

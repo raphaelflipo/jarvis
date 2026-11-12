@@ -32,7 +32,7 @@ function render() {
   if (!messages.length) {
     if (welcomeTemplate) { $('messages').append(welcomeTemplate.cloneNode(true)); return; }
     const welcome = document.createElement('div'); welcome.className = 'empty-state';
-    const title = document.createElement('h2'); title.textContent = 'Un espace pour vos idées.';
+    const title = document.createElement('h2'); title.textContent = 'Commencez une conversation.';
     const text = document.createElement('p'); text.textContent = 'Chargez un modèle, puis posez une question ou donnez un texte à reformuler. Vos échanges restent sur cet appareil.';
     welcome.append(title, text); $('messages').append(welcome);
   } else for (const message of messages) append(message.role, message.content);

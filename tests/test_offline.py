@@ -390,7 +390,7 @@ if shutil.which("git"):
     patch = "--- a/src/auth.py\n+++ b/src/auth.py\n@@ -1,3 +1,3 @@\n class FirebaseAuth:\n     def login(self, user):\n-        return user\n+        return user.strip()\n"
     r = registry.call("apply_patch", {"patch": patch, "cwd": str(proj)})
     check(r["ok"] and "user.strip()" in (proj / "src/auth.py").read_text(), "apply_patch (unified diff)")
-_cx = """*** Begin Patch
+_structured_patch = """*** Begin Patch
 *** Update File: src/auth.py
 @@ def login(self, user):
 -        return user.strip()
@@ -403,10 +403,10 @@ _cx = """*** Begin Patch
 +def ok():
 +    return True
 *** End Patch"""
-r = registry.call("apply_patch", {"patch": _cx, "cwd": str(proj)})
+r = registry.call("apply_patch", {"patch": _structured_patch, "cwd": str(proj)})
 _src = (proj / "src/auth.py").read_text()
 check(r["ok"] and "user.strip().lower()" in _src and "return []" in _src and (proj / "src/nouveau.py").read_text().startswith("def ok"),
-      "apply_patch : format « *** Begin Patch » (gpt-oss) — modification, 2 blocs, ajout de fichier")
+      "apply_patch : format structuré « *** Begin Patch » — modification, 2 blocs, ajout de fichier")
 r = registry.call("apply_patch", {"patch": "*** Begin Patch\n*** Delete File: src/nouveau.py\n*** End Patch", "cwd": str(proj)})
 check(not r["ok"] and (proj / "src/nouveau.py").exists(), "suppression par patch refusée (le fichier reste)")
 r = registry.call("apply_patch", {"patch": "*** Begin Patch\n*** Update File: src/auth.py\n@@\n-        return user.strip().lower()\n+        return user.lower()\n*** End Patch",

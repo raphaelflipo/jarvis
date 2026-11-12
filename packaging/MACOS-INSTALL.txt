@@ -1,4 +1,4 @@
-JARVIS POUR MAC — ÉDITION COMPLÈTE, PRÉVERSION 3.2
+JARVIS POUR MAC — ÉDITION AGENT, PRÉVERSION 3.2
 
 Ce téléchargement est un installateur avec les sources, pas une application
 préinstallée contenant les modèles. Il ne contient aucun compte, clé ni modèle.
@@ -55,6 +55,15 @@ L'agent peut modifier des fichiers : commencer dans un dossier de test et
 lire ses demandes d'accord. Les modèles ne sont pas infaillibles.
 Le site et le dépôt indiquent les essais réellement effectués pour cette
 préversion ; une archive construite n'atteste pas un essai sur chaque Mac.
+
+LIMITES CONNUES DE CETTE PRÉVERSION
+- Si Seatbelt est indisponible, les commandes peuvent être exécutées sans
+  profil d’isolation même lorsque l’option est cochée. Vérifier les diagnostics
+  et utiliser un environnement de test avant de confier des fichiers sensibles.
+- Annuler une tâche peut remplacer des modifications apportées ensuite au même
+  fichier. Conserver une copie indépendante avant d’utiliser la restauration.
+- La reconnaissance du type d’un fichier sans extension lit actuellement tout
+  son contenu. Éviter les très gros fichiers partagés sans extension.
 
 DÉSINSTALLATION
 Lancer ~/.jarvis/uninstall.sh. Le script conserve JarvisWorkspace et les

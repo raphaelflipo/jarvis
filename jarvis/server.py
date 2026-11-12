@@ -10,8 +10,7 @@ Sécurité : écoute uniquement sur 127.0.0.1 (accès iPhone via `tailscale serv
 comparaison en temps constant, verrouillage après 5 échecs ; contrôle d'origine ; CSP stricte ; téléversements
 limités au dossier « Fichiers reçus » de l'espace de travail.
 """
-# NB : pas de « from __future__ import annotations » ici : FastAPI doit voir les vrais types
-# (Request, WebSocket) sinon il les prend pour des paramètres d'URL → erreurs 403/422.
+# Les annotations restent évaluées : FastAPI doit recevoir les types Request et WebSocket.
 
 import asyncio
 import json

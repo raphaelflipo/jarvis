@@ -19,7 +19,7 @@ INDEX_DIR = JARVIS_DIR / "index"
 BROWSER_STATE = JARVIS_DIR / "browser-state.json"
 TOKEN_FILE = JARVIS_DIR / "server_token"
 
-VERSION = "3.2.0-beta.1"
+VERSION = "3.2.0-beta.2"
 NAME = "Jarvis"
 
 DEFAULTS: dict = {

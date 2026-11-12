@@ -9,7 +9,7 @@ WS="$HOME/JarvisWorkspace"
 BIN="$HOME/.local/bin"
 LOG=""
 STAGE=""
-VERSION="3.2.0-beta.1"
+VERSION="3.2.0-beta.2"
 [[ ! -f "$SRC/VERSION" ]] || VERSION="$(cat "$SRC/VERSION")"
 step() { printf '\n━━ %s\n' "$*"; }
 ok() { printf '✔ %s\n' "$*"; }
@@ -113,7 +113,7 @@ info = {
     "CFBundleName": "Jarvis", "CFBundleDisplayName": "Jarvis",
     "CFBundleIdentifier": "local.jarvis.app", "CFBundleExecutable": "Jarvis",
     "CFBundleIconFile": "AppIcon", "CFBundlePackageType": "APPL",
-    "CFBundleShortVersionString": sys.argv[2].split("-", 1)[0], "CFBundleVersion": "32",
+    "CFBundleShortVersionString": sys.argv[2].split("-", 1)[0], "CFBundleVersion": "33",
     "LSMinimumSystemVersion": "14.0", "LSApplicationCategoryType": "public.app-category.productivity",
     "NSHighResolutionCapable": True, "NSSupportsAutomaticGraphicsSwitching": True,
     "NSAppTransportSecurity": {"NSAllowsLocalNetworking": True},

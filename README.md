@@ -4,7 +4,7 @@ Un projet d’assistant personnel local de Raphaël Flipo. Deux éditions, avec 
 
 **[Ouvrir et installer Jarvis Local](https://raphaelflipo.github.io/jarvis/app/)** · **[Téléchargements](https://github.com/raphaelflipo/jarvis/releases)** · **[Présentation](https://raphaelflipo.github.io/jarvis/)**
 
-| | Jarvis Local · bêta 1 | Jarvis pour macOS · 3.2 bêta |
+| | Jarvis Local · bêta 2 | Jarvis pour macOS · 3.2 bêta 2 |
 |---|---|---|
 | Installation | Application web installable | Installateur avec sources, compilation sur le Mac |
 | Systèmes visés | iOS, Android, macOS, Windows, navigateur récent | Mac Apple Silicon, macOS 14+ |

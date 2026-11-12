@@ -1,15 +1,11 @@
 """
-Bac à sable macOS (Seatbelt / sandbox-exec) pour toutes les commandes shell et compilations de Jarvis.
+Profils Seatbelt pour les commandes shell et les compilations.
 
-Ce que le bac à sable garantit, quoi que contienne la commande (même un script écrit par l'agent,
-une commande encodée, `python -c …`) :
-  • écriture UNIQUEMENT dans : l'espace de travail, les dossiers projets autorisés, le dossier courant
-    de la commande (s'il est un vrai projet), les caches de compilation et les fichiers temporaires ;
-  • lecture INTERDITE : clés SSH, Trousseau, jetons GitHub/Firebase, cookies et données des navigateurs,
-    Messages, Mail, dossier interne de Jarvis ;
-  • réseau COUPÉ (y compris DNS) quand la tâche a lu du contenu externe — seul localhost reste joignable.
-Les opérations qui ont besoin de tes identifiants (git push, gh, firebase, ssh) passent par des outils
-dédiés, hors bac à sable, avec leurs propres règles de confirmation.
+Les écritures autorisées dépendent de la configuration, du dossier courant
+admissible, des caches de compilation et des fichiers temporaires. Le profil
+limite aussi les lectures des chemins DENY_READ et, selon la tâche, le réseau.
+wrap() indique si un profil a effectivement été appliqué. Les outils Git,
+déploiement et SSH utilisent leurs propres règles de confirmation.
 """
 from __future__ import annotations
 

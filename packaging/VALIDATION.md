@@ -13,7 +13,7 @@ Contrôles réalisés le 10 novembre 2026 sur un Mac Apple Silicon. Cette livrai
 
 ```sh
 python3 -m unittest discover -s tests -p test_packaging.py -v
-bash packaging/build.sh 3.2.0-beta.1
+bash packaging/build.sh 3.2.0-beta.2
 ```
 
 Le ZIP et son fichier `.sha256` sont écrits dans `dist/`. Le constructeur ne supprime pas les autres téléchargements présents dans ce dossier. Le contenu du ZIP est reproductible ; les dépendances téléchargées pendant l’installation ne sont pas verrouillées à des versions exactes.
@@ -25,3 +25,9 @@ L’installation complète sur un Mac neuf, le téléchargement des modèles, le
 Le programme exige macOS 14+, Apple Silicon, 16 Go de mémoire, 30 Go libres, les outils Apple et Homebrew. Il compile l’interface, prépare les bibliothèques et effectue les tests avant de remplacer les sources et l’application. Il conserve les copies précédentes ; l’environnement Python existant peut néanmoins être mis à jour, donc ce mécanisme n’est pas une restauration complète de l’installation.
 
 L’édition de base prépare la conversation avec Ollama. Les fonctions de vision, dictée, images et MLX demandent des composants supplémentaires. Les comptes en ligne et l’accès distant ne sont pas activés par l’installation. Une instance Ollama existante est réutilisée sans la reconfigurer ni l’arrêter.
+
+## Maintenance du 12 novembre 2026 · 3.2.0 bêta 2
+
+Les noms internes du parseur de patchs et plusieurs commentaires ont été harmonisés ; les formats acceptés restent inchangés. Les 263 contrôles du backend passent, comme sur les sources précédant cette maintenance. Les 7 tests d’archive passent. Les deux exécutables Swift compilent pour arm64/macOS 14. Les archives sont reconstruites à partir de la liste de fichiers autorisés. Aucune installation sur le profil utilisateur ni nouvelle vérification de notarisation n’a été effectuée.
+
+Les contrôles de cette maintenance ne valident pas toutes les propriétés de sécurité du produit. Le repli sans profil Seatbelt, le périmètre des dossiers inscriptibles, la restauration sans détection de conflit et la lecture complète des fichiers dans la reconnaissance de format demandent des corrections distinctes.

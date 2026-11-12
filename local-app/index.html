@@ -46,7 +46,7 @@
           <section class="intro-card">
             <span class="eyebrow"><span class="tiny-dot" aria-hidden="true"></span>Sans compte · sans abonnement</span>
             <h2>Votre IA.<br>Sur votre appareil.</h2>
-            <p>Un espace pour réfléchir, écrire et avancer. Le modèle répond directement ici, sur votre téléphone ou votre ordinateur.</p>
+            <p>Posez une question, reformulez un texte ou préparez un plan. Les réponses sont calculées sur votre téléphone ou votre ordinateur.</p>
             <span class="preview-tag">Version expérimentale</span>
           </section>
 
@@ -101,8 +101,8 @@
               <div class="welcome-symbol" aria-hidden="true">
                 <svg viewBox="0 0 64 64" fill="none"><path d="M32 9c0 13-10 23-23 23 13 0 23 10 23 23 0-13 10-23 23-23C42 32 32 22 32 9Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M49 8v10m-5-5h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </div>
-              <p class="eyebrow">Un peu d’aide, tout près de vous</p>
-              <h1>Faites place<br>à vos idées.</h1>
+              <p class="eyebrow">Conversation locale</p>
+              <h1>Commencez<br>une conversation.</h1>
               <p class="welcome-description">Chargez un modèle, puis commencez la conversation.<br>Aucun ordinateur à laisser allumé pour utiliser Jarvis sur votre téléphone.</p>
               <div class="ideas" aria-label="Exemples d’utilisation"><span>Reformuler un texte</span><span>Trouver des idées</span><span>Préparer un plan</span></div>
             </div>
@@ -112,7 +112,7 @@
             <p class="error-message" id="error" role="alert" hidden></p>
             <form class="composer" id="chat-form">
               <label class="sr-only" for="prompt">Votre message à Jarvis</label>
-              <textarea id="prompt" name="prompt" rows="2" maxlength="12000" placeholder="Qu’aimeriez-vous faire aujourd’hui ?" autocomplete="off" enterkeyhint="enter" aria-describedby="composer-help"></textarea>
+              <textarea id="prompt" name="prompt" rows="2" maxlength="4000" placeholder="Votre question ou le texte à reformuler…" autocomplete="off" enterkeyhint="enter" aria-describedby="composer-help"></textarea>
               <div class="composer-toolbar">
                 <span class="composer-hint" id="composer-help"><span class="tiny-dot" aria-hidden="true"></span>Discussion locale</span>
                 <div class="composer-buttons">
@@ -129,7 +129,7 @@
     </div>
 
     <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
-      <div class="dialog-header"><div><p class="eyebrow">À votre rythme</p><h2 id="settings-title">Votre espace local</h2></div><button class="icon-button" id="close-settings" type="button" aria-label="Fermer les réglages"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+      <div class="dialog-header"><div><p class="eyebrow">Réglages</p><h2 id="settings-title">Votre espace local</h2></div><button class="icon-button" id="close-settings" type="button" aria-label="Fermer les réglages"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
       <div class="dialog-content">
         <section class="settings-section"><h3>Sur cet appareil</h3><p>Le modèle d’IA s’exécute dans votre navigateur. Vous n’avez besoin ni de compte, ni d’un ordinateur distant. Le téléchargement initial nécessite Internet et peut occuper beaucoup d’espace.</p><p>Le navigateur conserve les données localement. Il peut les effacer pour libérer de la place ; vous devrez alors recharger le modèle. Un navigateur ou un appareil différent utilise son propre espace.</p></section>
         <section class="settings-section"><h3>Ce que Jarvis peut faire</h3><p>Répondre à vos messages, vous aider à écrire et réfléchir à partir du texte que vous partagez. Cette version autonome n’ouvre pas vos autres applications et n’agit pas sur votre appareil.</p><p class="field-help">Les résultats et la rapidité varient selon le modèle, le navigateur et le matériel. Vérifiez les informations importantes.</p></section>

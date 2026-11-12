@@ -1,6 +1,6 @@
-# Vérifications de Jarvis Local · bêta 1
+# Vérifications de Jarvis Local
 
-Essais du 10 novembre 2026, sur macOS Apple Silicon, dans le navigateur Chromium intégré à l’environnement de développement. Les essais d’inférence utilisent les vrais modèles, sans serveur de réponse ni simulation du texte généré.
+Essais de la bêta 1 du 10 novembre 2026, sur macOS Apple Silicon, dans le navigateur Chromium intégré à l’environnement de développement. Les essais d’inférence utilisent les vrais modèles, sans serveur de réponse ni simulation du texte généré.
 
 ## Essais réalisés
 
@@ -30,3 +30,9 @@ Archives : fichiers explicitement autorisés, aucune donnée du navigateur ni au
 - Cette bêta autonome ne fournit pas les outils système, la voix, les pièces jointes ou les intégrations de l’édition Mac.
 
 La publication est une **préversion publique**, pas une version stable certifiée sur les quatre systèmes.
+
+## Maintenance du 12 novembre 2026 · bêta 2
+
+Les textes d’accueil et de réglages ont été précisés. Les identifiants HTML, les clés de stockage, les modèles et le moteur d’inférence sont conservés. Le cache de l’interface porte un nouveau numéro de version ; les fichiers de modèles déjà téléchargés ne sont pas supprimés.
+
+Les 11 tests automatisés de l’application web passent. Les fichiers HTML, les liens, le manifeste, les politiques de scripts et la correspondance entre les sources et la copie du site sont contrôlés. Les archives sont reconstruites avec leurs empreintes. Aucun nouveau test d’inférence, d’installation sur téléphone ou de rendu navigateur n’a été réalisé pour cette maintenance. Les observations du 10 novembre ci-dessus restent celles de la bêta 1.
