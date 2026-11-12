@@ -1,6 +1,9 @@
 name: Android production package
 on:
   workflow_dispatch:
+  push:
+    branches: ["release/native-finalization-*"]
+    paths: [".github/workflows/android-package.yml"]
 permissions:
   contents: write
 jobs:
