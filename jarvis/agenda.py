@@ -23,7 +23,9 @@ JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"
 
 
 def helper() -> Path | None:
-    for p in HELPER_PATHS + (config.JARVIS_DIR / "bin" / "jarvis-agenda",):
+    import os
+    configured = (Path(os.environ["JARVIS_AGENDA_HELPER"]),) if os.environ.get("JARVIS_AGENDA_HELPER") else ()
+    for p in configured + HELPER_PATHS + (config.JARVIS_DIR / "bin" / "jarvis-agenda",):
         if p.exists():
             return p
     return None

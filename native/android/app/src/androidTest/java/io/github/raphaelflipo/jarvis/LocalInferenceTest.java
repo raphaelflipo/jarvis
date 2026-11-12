@@ -1,6 +1,8 @@
 package io.github.raphaelflipo.jarvis;
 
-import android.test.InstrumentationTestCase;
+import androidx.test.platform.app.InstrumentationRegistry;
+import org.junit.Test;
+import static org.junit.Assert.*;
 import android.content.Intent;
 import android.app.Activity;
 import android.view.ViewGroup;
@@ -9,8 +11,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
 
-public class LocalInferenceTest extends InstrumentationTestCase {
-    public void testLocalModelAndReopen() throws Exception {
+public class LocalInferenceTest {
+    private android.app.Instrumentation getInstrumentation() {return InstrumentationRegistry.getInstrumentation();}
+    @Test public void testLocalModelAndReopen() throws Exception {
         String js;
         try(InputStream in=getInstrumentation().getContext().getAssets().open("selftest.js")) {
             ByteArrayOutputStream out=new ByteArrayOutputStream(); byte[] chunk=new byte[8192]; int n;

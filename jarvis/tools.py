@@ -30,6 +30,8 @@ NET_ERR = re.compile(r"(Could not resolve host|ENOTFOUND|EAI_AGAIN|getaddrinfo|n
 def env() -> dict:
     e = os.environ.copy()
     e["PATH"] = f"/opt/homebrew/bin:/opt/homebrew/sbin:{HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    if os.environ.get("JARVIS_RUNTIME_BIN"):
+        e["PATH"] = os.environ["JARVIS_RUNTIME_BIN"] + ":" + e["PATH"]
     dev = Path(Ctx.cfg.get("dev_venv") or config.DEFAULTS["dev_venv"]).expanduser()
     if (dev / "bin" / "python").exists():        # python, pip, pytest de l'agent en priorité
         e["PATH"] = f"{dev / 'bin'}:" + e["PATH"]

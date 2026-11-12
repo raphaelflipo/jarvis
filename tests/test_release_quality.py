@@ -54,6 +54,20 @@ class ReleaseQuality(unittest.TestCase):
             finally:
                 registry.Ctx.backups = None
 
+    def test_new_file_recoverable_undo(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(config, 'BACKUP_DIR', Path(tmp) / 'backups'):
+            f = Path(tmp) / 'created.txt'
+            backups = registry.Backups('new')
+            registry.Ctx.backups = backups
+            try:
+                with registry.path_lock(f):
+                    registry.backup(f); f.write_text('created')
+                registry.Backups.undo(backups.dir)
+                self.assertFalse(f.exists())
+                self.assertEqual(next(backups.dir.glob('recovery-*/*')).read_text(), 'created')
+            finally:
+                registry.Ctx.backups = None
+
     def test_legacy_backup_never_overwrites(self):
         with tempfile.TemporaryDirectory() as tmp:
             d = Path(tmp); f = d / 'file'; f.write_text('new work')

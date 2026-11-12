@@ -74,7 +74,7 @@ jobs:
           script: |
             adb install native/android/app/build/outputs/apk/debug/app-debug.apk
             adb install native/android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w io.github.raphaelflipo.jarvis.test/android.test.InstrumentationTestRunner | tee android-test.txt
+            adb shell am instrument -w io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-test.txt
             adb shell run-as io.github.raphaelflipo.jarvis cat files/online.json > android-online.json
             adb shell run-as io.github.raphaelflipo.jarvis cat files/offline.json > android-offline.json
             python -c "import json; assert json.load(open('android-online.json'))['ok']; assert json.load(open('android-offline.json'))['ok']"

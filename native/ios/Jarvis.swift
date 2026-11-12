@@ -4,12 +4,19 @@ import Network
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
-    var window: UIWindow?
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        window = UIWindow(frame: UIScreen.main.bounds)
-        window?.rootViewController = JarvisViewController()
+    func application(_ application:UIApplication, configurationForConnecting session:UISceneSession, options:UIScene.ConnectionOptions)->UISceneConfiguration {
+        let configuration=UISceneConfiguration(name:"Jarvis",sessionRole:session.role)
+        configuration.delegateClass=SceneDelegate.self
+        return configuration
+    }
+}
+final class SceneDelegate:UIResponder,UIWindowSceneDelegate {
+    var window:UIWindow?
+    func scene(_ scene:UIScene,willConnectTo session:UISceneSession,options:UIScene.ConnectionOptions) {
+        guard let scene=scene as? UIWindowScene else {return}
+        window=UIWindow(windowScene:scene)
+        window?.rootViewController=JarvisViewController()
         window?.makeKeyAndVisible()
-        return true
     }
 }
 

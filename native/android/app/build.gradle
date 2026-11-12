@@ -2,7 +2,9 @@ plugins { id 'com.android.application' }
 android {
     namespace 'io.github.raphaelflipo.jarvis'
     compileSdk 35
-    defaultConfig { applicationId 'io.github.raphaelflipo.jarvis'; minSdk 29; targetSdk 35; versionCode 33001; versionName '3.3.0-rc.1'; testInstrumentationRunner 'android.test.InstrumentationTestRunner' }
+    defaultConfig { applicationId 'io.github.raphaelflipo.jarvis'; minSdk 29; targetSdk 35; versionCode 33001; versionName '3.3.0-rc.1'; testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner' }
     buildTypes { release { minifyEnabled false; debuggable false } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
+
+dependencies { androidTestImplementation "androidx.test:runner:1.6.2"; androidTestImplementation "androidx.test:rules:1.6.1"; androidTestImplementation "junit:junit:4.13.2" }

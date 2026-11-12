@@ -1,5 +1,5 @@
 // Jarvis.app — fenêtre native macOS (AppKit + WebKit) avec verre translucide (vibrancy).
-// Compilée sur ton Mac par l'installateur (swiftc des Outils de ligne de commande, gratuit).
+// Le paquet autonome contient le moteur et ses dépendances.
 // - lance le serveur local de Jarvis s'il ne tourne pas (enfant de l'app → autorisations macOS attribuées à « Jarvis ») ;
 // - fermer la fenêtre ne coupe rien ; un clic sur l'icône du Dock la rouvre ;
 // - ⌘Q quitte la fenêtre, les tâches continuent ; ⌥⌘Q arrête aussi les tâches ;
@@ -13,11 +13,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     var window: NSWindow!
     var webView: WKWebView!
     var server: Process?
+    var ollama: Process?
     var hotKeyRef: EventHotKeyRef?
     var hotKeySpec = ""
     var hotKeyHandlerInstalled = false
     let home = FileManager.default.homeDirectoryForCurrentUser
-    var jarvisDir: URL { home.appendingPathComponent(".jarvis") }
+    var jarvisDir: URL { URL(fileURLWithPath:ProcessInfo.processInfo.environment["JARVIS_HOME"] ?? home.appendingPathComponent(".jarvis").path) }
+    var resources: URL { Bundle.main.resourceURL! }
+    var bundled: Bool { FileManager.default.fileExists(atPath:resources.appendingPathComponent("python/bin/python3").path) }
+
 
     // ------------------------------------------------------------------ configuration
     func config() -> [String: Any] {
@@ -39,8 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let sem = DispatchSemaphore(value: 0)
         var req = URLRequest(url: url)
         req.timeoutInterval = 1.0
-        URLSession.shared.dataTask(with: req) { _, resp, _ in
-            ok = (resp as? HTTPURLResponse)?.statusCode == 200
+        URLSession.shared.dataTask(with: req) { data, resp, _ in
+            if let data, let json=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any] {
+                ok = (resp as? HTTPURLResponse)?.statusCode == 200 && json["version"] as? String == "3.3.0-rc.1"
+            }
             sem.signal()
         }.resume()
         _ = sem.wait(timeout: .now() + 1.5)
@@ -49,14 +55,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     func startServerIfNeeded() {
         if ping() { return }
-        let py = jarvisDir.appendingPathComponent("venv/bin/python3")
-        let script = jarvisDir.appendingPathComponent("app/jarvis.py")
+        try? FileManager.default.createDirectory(at:jarvisDir.appendingPathComponent("logs"),withIntermediateDirectories:true)
+        if bundled { startOllama() }
+        let py = bundled ? resources.appendingPathComponent("python/bin/python3") : jarvisDir.appendingPathComponent("venv/bin/python3")
+        let script = bundled ? resources.appendingPathComponent("backend/jarvis.py") : jarvisDir.appendingPathComponent("app/jarvis.py")
         let p = Process()
         p.executableURL = py
         p.arguments = [script.path, "serve"]
-        p.currentDirectoryURL = jarvisDir.appendingPathComponent("app")
+        p.currentDirectoryURL = script.deletingLastPathComponent()
         var env = ProcessInfo.processInfo.environment
-        env["PATH"] = "/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["PATH"] = py.deletingLastPathComponent().path + ":" + resources.appendingPathComponent("ollama").path + ":/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        env["JARVIS_HOME"] = jarvisDir.path
+        env["JARVIS_RUNTIME_BIN"] = py.deletingLastPathComponent().path
+        env["JARVIS_AGENDA_HELPER"] = Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("jarvis-agenda").path
+        env["PLAYWRIGHT_BROWSERS_PATH"] = resources.appendingPathComponent("browsers").path
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        if bundled { env["SSL_CERT_FILE"] = resources.appendingPathComponent("python/lib/python3.12/site-packages/certifi/cacert.pem").path }
         p.environment = env
         let logURL = jarvisDir.appendingPathComponent("logs/server.log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
@@ -68,6 +82,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         do { try p.run(); server = p } catch { NSLog("Jarvis: impossible de lancer le serveur: \(error)") }
     }
 
+    func startOllama() {
+        let cfg = config()
+        let host = cfg["ollama_host"] as? String ?? "http://127.0.0.1:11434"
+        guard host == "http://127.0.0.1:11434" else { return }
+        let process=Process()
+        process.executableURL=resources.appendingPathComponent("ollama/ollama")
+        process.arguments=["serve"]
+        var environment=ProcessInfo.processInfo.environment
+        environment["OLLAMA_HOST"]="127.0.0.1:11434"
+        process.environment=environment
+        let logURL=jarvisDir.appendingPathComponent("logs/ollama.log")
+        FileManager.default.createFile(atPath:logURL.path,contents:nil)
+        if let log=try? FileHandle(forWritingTo:logURL) {log.seekToEndOfFile();process.standardOutput=log;process.standardError=log}
+        do {try process.run();ollama=process} catch {NSLog("Moteur local indisponible: \(error)")}
+    }
+    func loadAndOfferModel() {
+        load()
+        if bundled && config()["model"] == nil { installModel(nil) }
+    }
+    @objc func installModel(_ sender:Any?) {
+        let model=config()["model"] as? String ?? "qwen3:1.7b"
+        let alert=NSAlert()
+        alert.messageText="Installer le modèle local"
+        alert.informativeText="Jarvis utilise \(model). Le téléchargement initial nécessite Internet et environ 1,4 Go pour le modèle proposé. Les conversations restent sur le Mac. Vous pourrez relancer cette étape dans le menu Jarvis."
+        alert.addButton(withTitle:"Télécharger"); alert.addButton(withTitle:"Plus tard")
+        guard alert.runModal() == .alertFirstButtonReturn else {return}
+        let progress=NSAlert(); progress.messageText="Téléchargement de \(model)…"
+        progress.informativeText="Laissez cette fenêtre ouverte. Le téléchargement peut prendre plusieurs minutes."
+        let indicator=NSProgressIndicator(frame:NSRect(x:0,y:0,width:300,height:20));indicator.style = .bar;indicator.isIndeterminate=true;indicator.startAnimation(nil);progress.accessoryView=indicator
+        progress.addButton(withTitle:"Fermer la fenêtre")
+        progress.beginSheetModal(for:window)
+        DispatchQueue.global().async {
+            let process=Process();process.executableURL=self.resources.appendingPathComponent("ollama/ollama");process.arguments=["pull",model]
+            var environment=ProcessInfo.processInfo.environment
+            environment["OLLAMA_HOST"] = self.config()["ollama_host"] as? String ?? "http://127.0.0.1:11434"
+            process.environment=environment
+            let output=Pipe();process.standardOutput=output;process.standardError=output
+            output.fileHandleForReading.readabilityHandler={handle in _=handle.availableData}
+            var success=false
+            do {try process.run();process.waitUntilExit();success=process.terminationStatus==0} catch {}
+            output.fileHandleForReading.readabilityHandler=nil
+            if success {
+                var settings=self.config();settings["model"]=model
+                if let data=try? JSONSerialization.data(withJSONObject:settings,options:[.prettyPrinted,.sortedKeys]) {try? data.write(to:self.jarvisDir.appendingPathComponent("config.json"),options:.atomic)}
+            }
+            DispatchQueue.main.async {
+                if progress.window.sheetParent != nil {self.window.endSheet(progress.window)}
+                let result=NSAlert();result.messageText=success ? "Modèle installé" : "Téléchargement interrompu"
+                result.informativeText=success ? "Quittez puis rouvrez Jarvis pour utiliser le modèle choisi." : "Vérifiez votre connexion et l'espace disponible, puis réessayez depuis le menu Jarvis."
+                result.runModal()
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ cycle de vie
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenu()
@@ -76,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             self.startServerIfNeeded()
             var tries = 0
             while !self.ping() && tries < 100 { Thread.sleep(forTimeInterval: 0.25); tries += 1 }
-            DispatchQueue.main.async { tries < 100 ? self.load() : self.showError() }
+            DispatchQueue.main.async { tries < 100 ? self.loadAndOfferModel() : self.showError() }
         }
         NSApp.activate(ignoringOtherApps: true)
         registerHotKey()
@@ -186,11 +254,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
     @objc func quitAndStop(_ sender: Any?) {
         server?.terminate()
-        let k = Process()
-        k.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
-        k.arguments = ["-f", ".jarvis/app/jarvis.py serve"]
-        try? k.run()
-        k.waitUntilExit()
+        ollama?.terminate()
         NSApp.terminate(nil)
     }
 
@@ -337,6 +401,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         appMenu.addItem(item("Masquer Jarvis", #selector(NSApplication.hide(_:)), "h"))
         appMenu.addItem(.separator())
         appMenu.addItem(item("Quitter (les tâches continuent)", #selector(NSApplication.terminate(_:)), "q"))
+        let modelItem=item("Installer le modèle local…",#selector(installModel(_:)),"",[]);modelItem.target=self;appMenu.addItem(modelItem)
         let q = item("Quitter et arrêter les tâches", #selector(quitAndStop(_:)), "q", [.command, .option]); q.target = self; appMenu.addItem(q)
         appItem.submenu = appMenu
 

@@ -183,7 +183,7 @@ class Backups:
                 pass
 
     def before_write(self, path: Path):
-        key = str(path.resolve()) if path.exists() else str(path.absolute())
+        key = str(security.resolve(path))
         with self.lock:
             if key in self.seen:
                 return
