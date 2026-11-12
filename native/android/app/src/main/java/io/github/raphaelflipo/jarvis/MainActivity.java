@@ -33,7 +33,7 @@ public final class MainActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         if(android.os.Build.VERSION.SDK_INT>=30) {
             getWindow().setDecorFitsSystemWindows(false);
-            getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+            getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
             content.setOnApplyWindowInsetsListener((view,insets)-> {
                 int types=android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout() | android.view.WindowInsets.Type.ime();
                 android.graphics.Insets safe=insets.getInsets(types);

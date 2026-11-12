@@ -120,7 +120,14 @@ public class LocalInferenceTest {
         }
         AtomicReference<Boolean> sendVisible=new AtomicReference<>(false);
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const r=document.getElementById('send-button').getBoundingClientRect();return r.top>=0 && r.bottom<=visualViewport.height;})()",value->sendVisible.set("true".equals(value))));
-        Thread.sleep(300);assertTrue("Le bouton Envoyer doit rester au-dessus du clavier",sendVisible.get());
+        Thread.sleep(300);assertTrue("Le bouton Envoyer doit rester dans le viewport",sendVisible.get());
+        AtomicReference<Double> sendScreenBottom=new AtomicReference<>(Double.MAX_VALUE);
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const r=document.getElementById('send-button').getBoundingClientRect();return {bottom:r.bottom,width:innerWidth};})()",value->{
+            try {org.json.JSONObject r=new org.json.JSONObject(value);int[] position=new int[2];web.getLocationOnScreen(position);sendScreenBottom.set(position[1]+r.getDouble("bottom")*web.getWidth()/r.getDouble("width"));}catch(Exception e){throw new RuntimeException(e);}
+        }));Thread.sleep(300);
+        int keyboardTop=activity.getWindow().getDecorView().getHeight()-keyboardInset.get();
+        android.os.Bundle keyboardMetrics=new android.os.Bundle();keyboardMetrics.putString("jarvis_keyboard","sendBottom="+sendScreenBottom.get()+", keyboardTop="+keyboardTop+", webHeight="+web.getHeight()+", ime="+keyboardInset.get());getInstrumentation().sendStatus(0,keyboardMetrics);
+        assertTrue("Le bouton Envoyer doit rester physiquement au-dessus du clavier",sendScreenBottom.get()<=keyboardTop);
         getInstrumentation().sendStringSync("Bonjour");Thread.sleep(300);tapElement(web,"send-button");
         AtomicReference<Boolean> replied=new AtomicReference<>(false);
         for(int i=0;i<120 && !replied.get();i++) {
