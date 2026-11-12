@@ -13,15 +13,13 @@ import java.util.concurrent.*;
 
 public final class MainActivity extends Activity {
     private WebView web;
-    private ServerSocket server;
-    private final ExecutorService clients = Executors.newFixedThreadPool(3);
+    private static ServerSocket server;
+    private static final ExecutorService clients = Executors.newFixedThreadPool(3);
     private static final String ORIGIN = "http://127.0.0.1:18769/";
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         try {
-            server = new ServerSocket(); server.setReuseAddress(true);
-            server.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"),18769));
-            new Thread(() -> { while(!server.isClosed()) try { Socket socket=server.accept(); clients.execute(() -> serve(socket)); } catch(IOException ignored) {} }, "jarvis-assets").start();
+            ensureServer(getApplicationContext().getAssets());
         } catch(IOException error) {
             new android.app.AlertDialog.Builder(this).setTitle("Jarvis ne peut pas démarrer").setMessage("Le port local est occupé. Fermez Jarvis puis réessayez.").setPositiveButton("Fermer",(d,w)->finish()).show(); return;
         }
@@ -44,7 +42,15 @@ public final class MainActivity extends Activity {
         });
         web.loadUrl(ORIGIN);
     }
-    private void serve(Socket socket) {
+    private static synchronized void ensureServer(android.content.res.AssetManager assets) throws IOException {
+        if(server!=null && !server.isClosed()) return;
+        ServerSocket listener=new ServerSocket(); listener.setReuseAddress(true);
+        try { listener.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"),18769)); }
+        catch(IOException error) { listener.close(); throw error; }
+        server=listener;
+        new Thread(() -> { while(!listener.isClosed()) try { Socket socket=listener.accept(); clients.execute(() -> serve(socket,assets)); } catch(IOException ignored) {} },"jarvis-assets").start();
+    }
+    private static void serve(Socket socket,android.content.res.AssetManager assets) {
         try(Socket s=socket) {
             s.setSoTimeout(5000);
             BufferedReader reader=new BufferedReader(new InputStreamReader(s.getInputStream(),StandardCharsets.US_ASCII));
@@ -57,7 +63,7 @@ public final class MainActivity extends Activity {
             if(resource.contains("..") || resource.contains("\\") || !resource.startsWith("/")) return;
             if(resource.equals("/")) resource="/index.html";
             String mime=resource.endsWith(".wasm")?"application/wasm":resource.endsWith(".js")||resource.endsWith(".mjs")?"text/javascript":resource.endsWith(".css")?"text/css":resource.endsWith(".html")?"text/html; charset=utf-8":resource.endsWith(".png")?"image/png":"application/json";
-            try(InputStream input=getAssets().open("app"+resource)) {
+            try(InputStream input=assets.open("app"+resource)) {
                 ByteArrayOutputStream buffer=new ByteArrayOutputStream(); byte[] chunk=new byte[16384]; int count; while((count=input.read(chunk))!=-1) buffer.write(chunk,0,count); byte[] data=buffer.toByteArray();
                 if(resource.equals("/index.html")) data=new String(data,StandardCharsets.UTF_8).replace("<head>","<head><meta name=\"jarvis-native\" content=\"bundled\">").getBytes(StandardCharsets.UTF_8);
                 OutputStream out=s.getOutputStream(); out.write(("HTTP/1.1 200 OK\r\nContent-Type: "+mime+"\r\nContent-Length: "+data.length+"\r\nCache-Control: no-cache\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
@@ -67,8 +73,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if(web!=null) {web.destroy(); web=null;}
-        try {if(server!=null) server.close();} catch(IOException ignored) {}
-        clients.shutdownNow(); super.onDestroy();
+        super.onDestroy();
     }
     @Override public void onBackPressed() { if(web!=null && web.canGoBack()) web.goBack(); else super.onBackPressed(); }
 }

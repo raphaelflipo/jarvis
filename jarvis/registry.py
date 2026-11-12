@@ -178,16 +178,20 @@ class Backups:
         if mf.exists():                      # reprise d'une conversation : on conserve l'historique d'annulation
             try:
                 self.manifest = json.loads(mf.read_text())
-                self.seen = {e["path"] for e in self.manifest}
+                self.seen = {e["path"] for e in self.manifest if not e.get("undone")}
             except (OSError, json.JSONDecodeError):
                 pass
 
     def before_write(self, path: Path):
         key = str(security.resolve(path))
         with self.lock:
+            # L'annulation peut avoir eu lieu depuis la dernière écriture de cet agent.
+            mf = self.dir / "manifest.json"
+            if mf.exists():
+                self.manifest = json.loads(mf.read_text())
+                self.seen = {e["path"] for e in self.manifest if not e.get("undone")}
             if key in self.seen:
                 return
-            self.seen.add(key)
             entry = {"path": key, "backup": None}
             if path.is_file():
                 self.dir.mkdir(parents=True, exist_ok=True)
@@ -196,6 +200,7 @@ class Backups:
                 entry["backup"] = str(dest)
             elif path.exists():
                 return
+            self.seen.add(key)
             self.manifest.append(entry)
             self.dir.mkdir(parents=True, exist_ok=True)
             self._save()

@@ -68,6 +68,20 @@ class ReleaseQuality(unittest.TestCase):
             finally:
                 registry.Ctx.backups = None
 
+    def test_followup_after_undo_has_its_own_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(config, 'BACKUP_DIR', Path(tmp) / 'backups'):
+            f = Path(tmp) / 'continued.txt'; f.write_text('original')
+            backups = registry.Backups('continued'); registry.Ctx.backups = backups
+            try:
+                for content in ('first edit', 'followup'):
+                    with registry.path_lock(f):
+                        registry.backup(f); f.write_text(content)
+                    self.assertIn('restauré', registry.Backups.undo(backups.dir))
+                    self.assertEqual(f.read_text(), 'original')
+                self.assertEqual(len(list(backups.dir.glob('recovery-*/*'))), 2)
+            finally:
+                registry.Ctx.backups = None
+
     def test_legacy_backup_never_overwrites(self):
         with tempfile.TemporaryDirectory() as tmp:
             d = Path(tmp); f = d / 'file'; f.write_text('new work')
