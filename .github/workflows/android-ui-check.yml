@@ -1,0 +1,48 @@
+name: Android production visual and keyboard check
+on:
+  push:
+    branches: ['codex/android-visual-validation']
+    paths: ['.github/workflows/android-ui-check.yml']
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download production APK and signed UI test
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v3.3.0-rc.1 --pattern Jarvis-3.3.0-rc.1-Android.apk
+          gh release download v3.3.0-ui-verification --pattern Jarvis-Android-ui-test.apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
+          script: |
+            adb install Jarvis-3.3.0-rc.1-Android.apk
+            adb install Jarvis-Android-ui-test.apk
+            adb shell am instrument -w -e class 'io.github.raphaelflipo.jarvis.LocalInferenceTest#testLocalModelAndReopen' -e jarvis_phase online io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee model-test.txt
+            adb shell am force-stop io.github.raphaelflipo.jarvis
+            adb shell am instrument -w -e class 'io.github.raphaelflipo.jarvis.LocalInferenceTest#testVisualLayoutAndKeyboard' io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee layout-test.txt
+            adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/before-keyboard.png before-keyboard.png
+            adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/with-keyboard.png with-keyboard.png
+            python -c "import pathlib; assert 'OK (1 test)' in pathlib.Path('model-test.txt').read_text(); assert 'OK (1 test)' in pathlib.Path('layout-test.txt').read_text()"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android-visual-check
+          path: |
+            *-keyboard.png
+            *-test.txt
