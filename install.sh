@@ -9,7 +9,7 @@ WS="$HOME/JarvisWorkspace"
 BIN="$HOME/.local/bin"
 LOG=""
 STAGE=""
-VERSION="3.2.0-beta.2"
+VERSION="3.3.0-rc.1"
 [[ ! -f "$SRC/VERSION" ]] || VERSION="$(cat "$SRC/VERSION")"
 step() { printf '\n━━ %s\n' "$*"; }
 ok() { printf '✔ %s\n' "$*"; }
