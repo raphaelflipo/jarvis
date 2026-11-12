@@ -1,10 +1,10 @@
 # Préparation d'une soumission iOS
 
-Statut : archive Release pour appareil physique préparée, non signée. Aucun lien App Store ni TestFlight actif. Une compilation pour simulateur ne donne pas accès à l'application sur un iPhone.
+Statut : archive de distribution publique non signée ; aucun lien App Store ni TestFlight actif. Une installation personnelle de développement a été signée et lancée sur un iPhone physique avec une Personal Team gratuite. Son profil expire après 7 jours. Le guide [Installation personnelle](INSTALLATION-PERSONNELLE.md) détaille ce circuit distinct de la distribution publique.
 
 - Nom : Jarvis.
 - Bundle ID : `io.github.raphaelflipo.jarvis`.
-- Version : 3.3.0 ; build 33001 ; édition de validation 3.3.0-rc.1.
+- Version : 3.3.0 ; build 33002 ; édition de validation 3.3.0-rc.2.
 - Langue principale : français ; catégorie proposée : Productivité.
 - Sous-titre proposé : « Votre conversation, en local ».
 - Description proposée : « Discutez avec un modèle exécuté sur votre iPhone ou iPad. Jarvis est gratuit et ne nécessite pas de compte. Un premier téléchargement de modèle nécessite Internet. Les conversations sont conservées sur votre appareil. Le modèle léger répond surtout en anglais ; le modèle Qwen3 proposé est mieux adapté au français et nécessite davantage de mémoire. Cette édition ne pilote pas les autres applications et ne recherche pas sur Internet. »
