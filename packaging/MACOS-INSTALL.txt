@@ -1,3 +1,6 @@
+NOTICE HISTORIQUE — INSTALLATEUR AVEC COMPILATION (BÊTA 2)
+Le paquet natif 3.3.0-rc.1 est un DMG autonome. Pour son installation, lire README.md et native/BUILD.md. Les instructions ci-dessous concernent uniquement l’ancien installateur de sources.
+
 JARVIS POUR MAC — ÉDITION AGENT, PRÉVERSION 3.2
 
 Ce téléchargement est un installateur avec les sources, pas une application

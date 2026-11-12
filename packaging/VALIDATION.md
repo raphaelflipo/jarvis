@@ -1,3 +1,5 @@
+> Historique des installateurs de sources bêta. Les corrections et paquets natifs de la RC sont décrits dans les notes de release et `native/BUILD.md`.
+
 # Validation de l’installateur macOS
 
 Contrôles réalisés le 10 novembre 2026 sur un Mac Apple Silicon. Cette livraison est un installateur de préversion avec sources, sans modèle embarqué, certificat Developer ID ni notarisation Apple.

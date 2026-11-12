@@ -24,7 +24,7 @@ Ajouter environ 23 Mo pour le moteur et l’interface. Le téléchargement et la
 
 Cette bêta répond à du texte. Elle ne possède pas les commandes système, la navigation web, les documents joints, la voix, les outils Mac, ni les fonctions d’agent de Jarvis pour macOS. Les conversations longues sont limitées aux derniers échanges, puis à un contexte de 1 024 jetons ; une réponse compte au plus 192 nouveaux jetons. Pas de génération en arrière-plan garantie, particulièrement sur téléphone.
 
-Il s’agit d’une **application web installable**, et non d’une publication App Store/Play Store, d’un APK, d’un IPA ou d’un EXE natif. Les quatre systèmes peuvent ouvrir la même application ; la compatibilité de l’inférence dépend du navigateur et du matériel. Voir VERIFICATION.md pour les essais effectivement réalisés et leurs limites.
+Ce dossier contient l’édition **web installable**. Les nouveaux conteneurs natifs réutilisent cette interface ; leurs paquets et statuts sont décrits dans le README principal. L’édition web seule ne constitue pas un APK, IPA ou EXE. Les quatre systèmes peuvent ouvrir la même application ; la compatibilité de l’inférence dépend du navigateur et du matériel. Voir VERIFICATION.md pour les essais effectivement réalisés et leurs limites.
 
 ## Confidentialité
 
