@@ -1,6 +1,6 @@
 # Construire les applications natives
 
-Version de validation : **3.3.0-rc.1**. Aucun des paquets ne nécessite une compilation chez l'utilisateur.
+Versions de validation : **Agent Mac 3.3.0-rc.1**, **Local Windows/Android/iOS 3.3.0-rc.2**. Aucun des paquets ne nécessite une compilation chez l'utilisateur.
 
 ## Sources et périmètre
 
@@ -72,3 +72,7 @@ python tests/test_offline.py
 ```
 
 Les tests Python exigent leurs dépendances ; une intégration HTTP/WebSocket manquante doit faire échouer la vérification. Le test historique simule le LLM ; il ne prouve pas l'inférence réelle. `native/common/selftest.js` charge et exécute au contraire un modèle réel, puis vérifie le cache et l'historique lors d'une deuxième ouverture. Windows bloque les requêtes extérieures pendant ce deuxième essai ; iOS et Android utilisent le chargement cache seul. Le workflow `.github/workflows/native-validation.yml` produit les paquets et rapports Windows/Android. Ne jamais inclure de clés, profils personnels ou jetons dans les artefacts.
+
+## Validation de la révision Local RC2
+
+Le workflow natif installe d'abord Windows RC1, conserve son profil puis installe RC2 et vérifie le chargement hors ligne et l'envoi depuis les contrôles visibles. Le workflow Android signé installe RC1 avec la même clé, conserve modèle et historique, met à jour vers RC2 puis vérifie le clavier logiciel, la visibilité du bouton Envoyer et une réponse hors ligne. Les captures sont conservées comme preuves. Exécuter ces workflows sur le commit de livraison et vérifier les assertions ; une compilation seule ne valide pas ces parcours. La signature APK vérifiée est v3.

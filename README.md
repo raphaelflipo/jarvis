@@ -1,6 +1,6 @@
 # Jarvis
 
-Assistant personnel local de Raphaël Flipo. **3.3.0-rc.1 est une version de validation**, avec des paquets natifs et des niveaux de vérification distincts selon les plateformes.
+Assistant personnel local de Raphaël Flipo. **Agent Mac 3.3.0-rc.1 et Local 3.3.0-rc.2 sont des versions de validation**, avec des paquets natifs et des niveaux de vérification distincts selon les plateformes.
 
 **[Téléchargements et statuts](https://raphaelflipo.github.io/jarvis/)** · **[Releases](https://github.com/raphaelflipo/jarvis/releases)** · **[Accès web complémentaire](https://raphaelflipo.github.io/jarvis/app/)**
 
