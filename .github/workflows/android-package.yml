@@ -2,7 +2,7 @@ name: Android production package
 on:
   workflow_dispatch:
   push:
-    branches: ["release/native-finalization-*"]
+    branches: ["release/native-finalization-*", "codex/native-finalization-*"]
     paths: [".github/workflows/android-package.yml", "native/android/**"]
 permissions:
   contents: write
@@ -27,4 +27,4 @@ jobs:
         run: |
           cp native/android/app/build/outputs/apk/release/app-release-unsigned.apk Jarvis-Android-unsigned.apk
           cp native/android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk Jarvis-Android-verification-unsigned.apk
-          gh release upload v3.3.0-rc.1 Jarvis-Android-unsigned.apk Jarvis-Android-verification-unsigned.apk --clobber
+          gh release upload v3.3.0-rc.2 Jarvis-Android-unsigned.apk Jarvis-Android-verification-unsigned.apk --clobber

@@ -1,4 +1,4 @@
-const CACHE = 'jarvis-local-shell-3.3.0-rc.1';
+const CACHE = 'jarvis-local-shell-3.3.0-rc.2';
 const FILES = ['./', './index.html', './styles.css', './app.js', './models.js', './inference-worker.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './vendor/transformers.min.js', './vendor/ort-wasm-simd-threaded.jsep.mjs', './vendor/ort-wasm-simd-threaded.jsep.wasm'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES))));
 self.addEventListener('activate', event => event.waitUntil((async () => {

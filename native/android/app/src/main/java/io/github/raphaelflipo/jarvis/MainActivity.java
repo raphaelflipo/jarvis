@@ -23,7 +23,27 @@ public final class MainActivity extends Activity {
         } catch(IOException error) {
             new android.app.AlertDialog.Builder(this).setTitle("Jarvis ne peut pas démarrer").setMessage("Le port local est occupé. Fermez Jarvis puis réessayez.").setPositiveButton("Fermer",(d,w)->finish()).show(); return;
         }
-        web = new WebView(this); setContentView(web);
+        android.widget.FrameLayout content=new android.widget.FrameLayout(this);
+        content.setBackgroundColor(android.graphics.Color.rgb(237,244,232));
+        web = new WebView(this);
+        content.addView(web,new android.widget.FrameLayout.LayoutParams(-1,-1));
+        setContentView(content);
+        getWindow().setStatusBarColor(android.graphics.Color.rgb(237,244,232));
+        getWindow().setNavigationBarColor(android.graphics.Color.rgb(237,244,232));
+        getWindow().getDecorView().setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        if(android.os.Build.VERSION.SDK_INT>=30) {
+            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+            content.setOnApplyWindowInsetsListener((view,insets)-> {
+                int types=android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.displayCutout() | android.view.WindowInsets.Type.ime();
+                android.graphics.Insets safe=insets.getInsets(types);
+                view.setPadding(safe.left,safe.top,safe.right,safe.bottom);
+                android.view.WindowInsetsController controller=view.getWindowInsetsController();
+                if(controller!=null) controller.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                return new android.view.WindowInsets.Builder(insets).setInsets(types,android.graphics.Insets.NONE).build();
+            });
+            content.requestApplyInsets();
+        }
         WebSettings settings=web.getSettings(); settings.setJavaScriptEnabled(true); settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false); settings.setAllowContentAccess(false); settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.setWebViewClient(new WebViewClient() {

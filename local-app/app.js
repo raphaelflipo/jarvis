@@ -52,7 +52,8 @@ function controls() {
 function readyStatus() {
   const offline = !navigator.onLine;
   const cached = shellCached && modelCached;
-  status(`Prêt · ${MODELS[loadedKey].label} · ${offline ? 'Hors connexion' : 'Calcul sur cet appareil'}${cached ? ' · Prêt hors ligne' : ' · Cache hors ligne incomplet'}`, 'ready');
+  status(cached ? 'Prêt hors ligne' : 'Prêt · cache partiel', 'ready');
+  $('status').title = `${MODELS[loadedKey].label} · ${offline ? 'Hors connexion' : 'Calcul sur cet appareil'}${cached ? ' · Cache complet' : ' · Cache incomplet'}`;
 }
 async function hasModel(key) {
   try {
@@ -118,7 +119,7 @@ async function load() {
     }
   };
   worker.onerror = event => { console.warn('Jarvis Local worker:', event.message); failed('Le moteur local a été interrompu. Essayez le modèle léger ou un navigateur à jour.'); };
-  worker.postMessage({ type: 'load', key, offline: !navigator.onLine });
+  worker.postMessage({ type: 'load', key, offline: cached || !navigator.onLine });
 }
 function failed(message) {
   worker?.terminate(); worker = null; busy = false; ready = false; generating = false;

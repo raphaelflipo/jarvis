@@ -1,9 +1,6 @@
 name: Verify signed Android production APK
 on:
   workflow_dispatch:
-  push:
-    branches: ['release/native-finalization-*']
-    paths: ['.github/workflows/android-signed-validation.yml']
 permissions:
   contents: write
 jobs:
@@ -16,10 +13,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v3.3.0-rc.1 --pattern Jarvis-3.3.0-rc.1-Android.apk --pattern Jarvis-Android-verification.apk
+          gh release download v3.3.0-rc.2 --pattern Jarvis-3.3.0-rc.2-Android.apk --pattern Jarvis-Android-verification.apk
           signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
-          "$signer" verify --verbose --print-certs Jarvis-3.3.0-rc.1-Android.apk | tee android-signature.txt
-          sha256sum Jarvis-3.3.0-rc.1-Android.apk > android-sha256.txt
+          "$signer" verify --verbose --print-certs Jarvis-3.3.0-rc.2-Android.apk | tee android-signature.txt
+          sha256sum Jarvis-3.3.0-rc.2-Android.apk > android-sha256.txt
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -34,11 +31,16 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
           script: |
-            adb install Jarvis-3.3.0-rc.1-Android.apk
+            adb shell settings put secure show_ime_with_hard_keyboard 1
+            adb install Jarvis-3.3.0-rc.2-Android.apk
             adb install Jarvis-Android-verification.apk
-            adb shell am instrument -w -e jarvis_phase online io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-online-test.txt
+            adb shell am instrument -w -e class io.github.raphaelflipo.jarvis.LocalInferenceTest#testLocalModelAndReopen -e jarvis_phase online io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-online-test.txt
             adb shell am force-stop io.github.raphaelflipo.jarvis
-            adb shell am instrument -w -e jarvis_phase offline io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-offline-test.txt
+            adb shell am instrument -w -e class io.github.raphaelflipo.jarvis.LocalInferenceTest#testLocalModelAndReopen -e jarvis_phase offline io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-offline-test.txt
+            adb shell am force-stop io.github.raphaelflipo.jarvis
+            adb shell am instrument -w -e class 'io.github.raphaelflipo.jarvis.LocalInferenceTest#testVisualLayoutAndKeyboard' io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-layout-test.txt
+            adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/before-keyboard.png android-before-keyboard.png
+            adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/with-keyboard.png android-with-keyboard.png
             adb shell dumpsys webviewupdate > android-webview.txt
             python -c "import json,re,pathlib; reports={p:json.loads(re.search('INSTRUMENTATION_STATUS: jarvis_'+p+'=(.+)',pathlib.Path('android-'+p+'-test.txt').read_text()).group(1)) for p in ['online','offline']}; assert all(r['ok'] for r in reports.values()); pathlib.Path('android-production-verification.json').write_text(json.dumps(reports,indent=2))"
       - uses: actions/upload-artifact@v4
@@ -48,3 +50,4 @@ jobs:
           path: |
             android-*.txt
             android-production-verification.json
+            android-*.png

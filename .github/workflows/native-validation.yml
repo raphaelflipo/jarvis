@@ -83,7 +83,7 @@ jobs:
         run: |
           Copy-Item online.json windows-online.json
           Copy-Item offline.json windows-offline.json
-          gh release upload v3.3.0-rc.1 native/windows/dist/*Setup.exe windows-online.json windows-offline.json signature.txt --clobber
+          gh release upload v3.3.0-rc.2 native/windows/dist/*Setup.exe windows-online.json windows-offline.json signature.txt --clobber
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 40

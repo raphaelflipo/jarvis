@@ -1,5 +1,5 @@
 {
-  "name": "jarvis-local", "version": "3.3.0-rc.1", "private": true,
+  "name": "jarvis-local", "version": "3.3.0-rc.2", "private": true,
   "type": "module", "license": "MIT",
   "description": "Assistant de conversation autonome pour navigateur, sans serveur d’inférence.",
   "scripts": { "test": "node --test ../tests/test_local_app.mjs" }

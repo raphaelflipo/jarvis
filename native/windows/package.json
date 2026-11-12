@@ -1,5 +1,5 @@
 {
-  "name": "jarvis-local-desktop", "productName": "Jarvis", "version": "3.3.0-rc.1", "private": true,
+  "name": "jarvis-local-desktop", "productName": "Jarvis", "version": "3.3.0-rc.2", "private": true,
   "description": "Conversation privée avec un modèle exécuté sur cet ordinateur.",
   "author": "Raphaël Flipo", "license": "MIT", "main": "main.cjs",
   "devDependencies": { "electron": "45.3.1", "electron-builder": "26.18.0" },
