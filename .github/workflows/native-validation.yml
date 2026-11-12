@@ -72,7 +72,7 @@ jobs:
             $process = Start-Process -PassThru -FilePath $exe
             if (!$process.WaitForExit(660000)) { $process.Kill(); throw 'Inference timeout' }
             $report = Get-Content $env:JARVIS_TEST_REPORT | ConvertFrom-Json
-            if (!$report.ok) { throw ($report | ConvertTo-Json) }
+            if (!$report.ok -or !$report.interface.ok) { throw ($report | ConvertTo-Json) }
           }
           Get-AuthenticodeSignature $installer | Format-List Status,StatusMessage | Out-File signature.txt
           Get-FileHash $installer -Algorithm SHA256 | Format-List | Out-File sha256.txt
@@ -129,7 +129,7 @@ jobs:
             adb shell am instrument -w io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-test.txt
             adb shell run-as io.github.raphaelflipo.jarvis cat files/online.json > android-online.json
             adb shell run-as io.github.raphaelflipo.jarvis cat files/offline.json > android-offline.json
-            python -c "import json; assert json.load(open('android-online.json'))['ok']; assert json.load(open('android-offline.json'))['ok']"
+            python -c "import pathlib; assert 'OK (2 tests)' in pathlib.Path('android-test.txt').read_text(); import json; assert json.load(open('android-online.json'))['ok']; assert json.load(open('android-offline.json'))['ok']"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
