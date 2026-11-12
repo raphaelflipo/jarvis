@@ -1063,9 +1063,8 @@ try:
     import uvicorn
     from websockets.sync.client import connect as ws_connect
     HAVE_STACK = True
-except ImportError:
-    HAVE_STACK = False
-    print("  (ignoré : FastAPI/uvicorn absents de cet environnement — testé sur le Mac)")
+except ImportError as error:
+    raise SystemExit(f"Dépendance de vérification manquante : {error.name}. Installez les dépendances de test.")
 if HAVE_STACK:
     import socket
     import urllib.request

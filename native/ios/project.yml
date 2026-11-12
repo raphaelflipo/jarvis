@@ -27,3 +27,19 @@ targets:
         buildPhase: resources
     info:
       path: Info.plist
+      properties:
+        CFBundleDisplayName: Jarvis
+        CFBundleShortVersionString: '3.3.0'
+        CFBundleVersion: '33001'
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            '127.0.0.1':
+              NSExceptionAllowsInsecureHTTPLoads: true
+        WKAppBoundDomains: ['127.0.0.1', 'localhost']
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        ITSAppUsesNonExemptEncryption: false
