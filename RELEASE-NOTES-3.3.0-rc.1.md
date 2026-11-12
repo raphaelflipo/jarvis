@@ -1,5 +1,7 @@
 # Jarvis 3.3.0-rc.1 — applications natives en validation
 
+> Android : cette révision présente un défaut de clavier pouvant recouvrir la saisie sur certaines WebView. Utiliser la révision Local RC2 après sa publication ; les autres paquets conservent leurs statuts ci-dessous.
+
 Cette RC fournit un DMG Mac autonome, un installateur Windows et un APK Android signé. Une application iOS autonome est compilée pour appareil physique et testée sur simulateur ; **aucun canal public iPhone n'est actif**. La RC n'est pas présentée comme une version finale stable sur les quatre systèmes.
 
 ## Paquets et contrôles
