@@ -41,6 +41,7 @@ jobs:
             adb shell am instrument -w -e class 'io.github.raphaelflipo.jarvis.LocalInferenceTest#testVisualLayoutAndKeyboard' io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-layout-test.txt
             adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/before-keyboard.png android-before-keyboard.png
             adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/with-keyboard.png android-with-keyboard.png
+            adb pull /sdcard/Android/data/io.github.raphaelflipo.jarvis/files/after-reply.png android-after-reply.png
             adb shell dumpsys webviewupdate > android-webview.txt
             python -c "import json,re,pathlib; reports={p:json.loads(re.search('INSTRUMENTATION_STATUS: jarvis_'+p+'=(.+)',pathlib.Path('android-'+p+'-test.txt').read_text()).group(1)) for p in ['online','offline']}; assert all(r['ok'] for r in reports.values()); pathlib.Path('android-production-verification.json').write_text(json.dumps(reports,indent=2))"
       - uses: actions/upload-artifact@v4

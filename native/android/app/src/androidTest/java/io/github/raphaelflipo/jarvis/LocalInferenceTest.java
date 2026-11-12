@@ -20,6 +20,15 @@ public class LocalInferenceTest {
         }
         return null;
     }
+    private void tapElement(WebView web,String id) throws Exception {
+        java.util.concurrent.CountDownLatch positioned=new java.util.concurrent.CountDownLatch(1);float[] point=new float[2];
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const r=document.getElementById('"+id+"').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
+            try {org.json.JSONObject c=new org.json.JSONObject(value);int[] location=new int[2];web.getLocationOnScreen(location);float scale=(float)(web.getWidth()/c.getDouble("width"));point[0]=location[0]+(float)c.getDouble("x")*scale;point[1]=location[1]+(float)c.getDouble("y")*scale;}catch(Exception e){throw new RuntimeException(e);}positioned.countDown();
+        }));
+        assertTrue(positioned.await(5,java.util.concurrent.TimeUnit.SECONDS));long now=android.os.SystemClock.uptimeMillis();
+        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,now,android.view.MotionEvent.ACTION_DOWN,point[0],point[1],0));Thread.sleep(80);
+        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,android.os.SystemClock.uptimeMillis(),android.view.MotionEvent.ACTION_UP,point[0],point[1],0));
+    }
     @Test public void testLocalModelAndReopen() throws Exception {
         String js;
         try(InputStream in=getInstrumentation().getContext().getAssets().open("selftest.js")) {
@@ -103,6 +112,16 @@ public class LocalInferenceTest {
         try(FileOutputStream output=new FileOutputStream(new File(folder,"with-keyboard.png"))) {
             getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
         }
+        AtomicReference<Boolean> sendVisible=new AtomicReference<>(false);
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const r=document.getElementById('send-button').getBoundingClientRect();return r.top>=0 && r.bottom<=visualViewport.height;})()",value->sendVisible.set("true".equals(value))));
+        Thread.sleep(300);assertTrue("Le bouton Envoyer doit rester au-dessus du clavier",sendVisible.get());
+        getInstrumentation().sendStringSync("Bonjour");Thread.sleep(300);tapElement(web,"send-button");
+        AtomicReference<Boolean> replied=new AtomicReference<>(false);
+        for(int i=0;i<120 && !replied.get();i++) {
+            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.querySelectorAll('#messages .message').length>=42 && document.getElementById('stop-button').hidden",value->replied.set("true".equals(value))));Thread.sleep(1000);
+        }
+        assertTrue("Une réponse doit être affichée dans l'interface hors ligne",replied.get());
+        try(FileOutputStream output=new FileOutputStream(new File(folder,"after-reply.png"))) {getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);}
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("JSON.stringify({viewportHeight:innerHeight,visualHeight:visualViewport.height,promptBottom:document.getElementById('prompt').getBoundingClientRect().bottom,headerTop:document.querySelector('.app-header').getBoundingClientRect().top,documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth})",value->{android.os.Bundle report=new android.os.Bundle();report.putString("jarvis_layout",value);getInstrumentation().sendStatus(0,report);}));
         getInstrumentation().runOnMainSync(activity::finish);
     }

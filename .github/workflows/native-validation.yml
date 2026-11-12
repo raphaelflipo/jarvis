@@ -48,14 +48,25 @@ jobs:
       - run: npm run dist
         working-directory: native/windows
       - name: Install and verify the packaged application twice
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          gh release download v3.3.0-rc.1 --pattern Jarvis-3.3.0-rc.1-Windows-x64-Setup.exe --dir "$env:RUNNER_TEMP/previous-jarvis"
+          $env:GH_TOKEN = $null
+          $previous = (Get-ChildItem "$env:RUNNER_TEMP/previous-jarvis/*.exe")[0].FullName
+          Start-Process -Wait -FilePath $previous -ArgumentList '/S'
+          $exe = "$env:LOCALAPPDATA\Programs\Jarvis\Jarvis.exe"
+          $env:JARVIS_TEST_PROFILE = $null
+          $env:JARVIS_TEST_REPORT = "$env:GITHUB_WORKSPACE/previous.json"
+          $env:JARVIS_TEST_OFFLINE = '0'
+          $old = Start-Process -PassThru -FilePath $exe
+          if (!$old.WaitForExit(660000)) { $old.Kill(); throw 'Previous version timeout' }
+          if (!(Get-Content $env:JARVIS_TEST_REPORT | ConvertFrom-Json).ok) { throw 'Previous version failed' }
           $installer = (Get-ChildItem native/windows/dist/*Setup.exe)[0].FullName
           Start-Process -Wait -FilePath $installer -ArgumentList '/S'
-          $exe = "$env:LOCALAPPDATA\Programs\Jarvis\Jarvis.exe"
           if (!(Test-Path $exe)) { throw 'Installed application missing' }
-          $env:JARVIS_TEST_PROFILE = "$env:RUNNER_TEMP\jarvis-profile"
-          foreach ($phase in @('online','offline')) {
+          foreach ($phase in @('offline','online')) {
             $env:JARVIS_TEST_REPORT = "$env:GITHUB_WORKSPACE\$phase.json"
             $env:JARVIS_TEST_OFFLINE = if ($phase -eq 'offline') {'1'} else {'0'}
             $process = Start-Process -PassThru -FilePath $exe

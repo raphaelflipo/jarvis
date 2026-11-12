@@ -35,7 +35,7 @@ else {
     window.webContents.on('render-process-gone', () => { if (!testFile) window.loadURL(origin + '/'); });
     await window.loadURL(origin + '/?offline=' + Number(offline));
     if (testFile) {
-      try {const report=await window.webContents.executeJavaScript(fs.readFileSync(path.join(__dirname,'selftest.js'),'utf8')); fs.writeFileSync(testFile,JSON.stringify(report,null,2)); app.quit();}
+      try {const report=await window.webContents.executeJavaScript(fs.readFileSync(path.join(__dirname,'selftest.js'),'utf8')); await new Promise(resolve=>{window.webContents.once('did-finish-load',resolve);window.webContents.reload();}); report.interface=await window.webContents.executeJavaScript(fs.readFileSync(path.join(__dirname,'ui-selftest.js'),'utf8')); fs.writeFileSync(testFile,JSON.stringify(report,null,2)); app.quit();}
       catch(error) {fs.writeFileSync(testFile,JSON.stringify({ok:false,error:String(error)})); app.exit(1);}
     }
   }).catch(error => {if(testFile) fs.writeFileSync(testFile,JSON.stringify({ok:false,error:String(error)})); app.exit(1);});

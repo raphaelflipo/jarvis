@@ -22,3 +22,5 @@ print('Ressources natives synchronisées.')
 
 d=ROOT/"native/android/app/src/androidTest/assets";d.mkdir(parents=True,exist_ok=True)
 shutil.copy2(ROOT/"native/common/selftest.js",d/"selftest.js")
+
+shutil.copy2(ROOT/'native/common/ui-selftest.js',ROOT/'native/windows/ui-selftest.js')

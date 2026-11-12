@@ -44,6 +44,9 @@ public final class MainActivity extends Activity {
             });
             content.requestApplyInsets();
         }
+        web.addOnLayoutChangeListener((view,l,t,r,b,ol,ot,oright,ob)-> {
+            if(b-t<ob-ot && view.hasFocus()) ((WebView)view).evaluateJavascript("(()=>{const e=document.activeElement;if(e && ['TEXTAREA','INPUT'].includes(e.tagName)) e.scrollIntoView({block:'center',behavior:'instant'});})()",null);
+        });
         WebSettings settings=web.getSettings(); settings.setJavaScriptEnabled(true); settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false); settings.setAllowContentAccess(false); settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.setWebViewClient(new WebViewClient() {

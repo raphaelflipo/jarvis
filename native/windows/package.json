@@ -7,7 +7,7 @@
   "build": {
     "appId": "io.github.raphaelflipo.jarvis", "productName": "Jarvis",
     "artifactName": "Jarvis-${version}-Windows-x64-Setup.${ext}",
-    "files": ["main.cjs", "selftest.js", "app/**/*", "package.json"],
+    "files": ["main.cjs", "selftest.js", "ui-selftest.js", "app/**/*", "package.json"],
     "win": { "target": "nsis", "icon": "icon.ico", "signAndEditExecutable": true },
     "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false }
   }

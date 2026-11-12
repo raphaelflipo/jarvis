@@ -21,3 +21,4 @@ native/ios/selftest.js
 native/ios/Assets.xcassets/
 native/ios/build/
 native/android/app/src/androidTest/assets/
+native/windows/ui-selftest.js
