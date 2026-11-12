@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.nio.charset.StandardCharsets;
 import java.io.*;
 
+@org.junit.FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
 public class LocalInferenceTest {
     private android.app.Instrumentation getInstrumentation() {return InstrumentationRegistry.getInstrumentation();}
     private WebView findWebView(android.view.View view) {
@@ -55,7 +56,10 @@ public class LocalInferenceTest {
             String report=title.get(); assertNotNull(report); assertTrue(report,report.startsWith("JARVIS_TEST:"));
             try(FileOutputStream out=new FileOutputStream(new File(getInstrumentation().getTargetContext().getFilesDir(),offline?"offline.json":"online.json"))) {out.write(report.substring(12).getBytes(StandardCharsets.UTF_8));}
             android.os.Bundle metrics=new android.os.Bundle();
-            metrics.putString(offline?"jarvis_offline":"jarvis_online",report.substring(12));
+            org.json.JSONObject result=new org.json.JSONObject(report.substring(12));
+            android.content.pm.PackageInfo info=getInstrumentation().getTargetContext().getPackageManager().getPackageInfo("io.github.raphaelflipo.jarvis",0);
+            result.put("appVersion",info.versionName);result.put("build",info.getLongVersionCode());
+            metrics.putString(offline?"jarvis_offline":"jarvis_online",result.toString());
             getInstrumentation().sendStatus(0,metrics);
             assertTrue(report,report.contains("\"ok\":true"));
             getInstrumentation().runOnMainSync(activity::finish);

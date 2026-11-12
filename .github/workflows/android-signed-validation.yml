@@ -13,6 +13,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          gh release download v3.3.0-rc.1 --pattern Jarvis-3.3.0-rc.1-Android.apk
           gh release download v3.3.0-rc.2 --pattern Jarvis-3.3.0-rc.2-Android.apk --pattern Jarvis-Android-verification.apk
           signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
           "$signer" verify --verbose --print-certs Jarvis-3.3.0-rc.2-Android.apk | tee android-signature.txt
@@ -32,10 +33,11 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
           script: |
             adb shell settings put secure show_ime_with_hard_keyboard 1
-            adb install Jarvis-3.3.0-rc.2-Android.apk
+            adb install Jarvis-3.3.0-rc.1-Android.apk
             adb install Jarvis-Android-verification.apk
             adb shell am instrument -w -e class io.github.raphaelflipo.jarvis.LocalInferenceTest#testLocalModelAndReopen -e jarvis_phase online io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-online-test.txt
             adb shell am force-stop io.github.raphaelflipo.jarvis
+            adb install -r Jarvis-3.3.0-rc.2-Android.apk
             adb shell am instrument -w -e class io.github.raphaelflipo.jarvis.LocalInferenceTest#testLocalModelAndReopen -e jarvis_phase offline io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-offline-test.txt
             adb shell am force-stop io.github.raphaelflipo.jarvis
             adb shell am instrument -w -e class 'io.github.raphaelflipo.jarvis.LocalInferenceTest#testVisualLayoutAndKeyboard' io.github.raphaelflipo.jarvis.test/androidx.test.runner.AndroidJUnitRunner | tee android-layout-test.txt
