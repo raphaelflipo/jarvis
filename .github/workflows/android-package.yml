@@ -1,0 +1,27 @@
+name: Android production package
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python -m pip install pillow
+      - run: python native/prepare.py
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.11.1' }
+      - run: gradle -p native/android assembleRelease assembleDebugAndroidTest
+      - name: Stage unsigned production APK and verification APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp native/android/app/build/outputs/apk/release/app-release-unsigned.apk Jarvis-Android-unsigned.apk
+          cp native/android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk Jarvis-Android-verification-unsigned.apk
+          gh release upload v3.3.0-rc.1 Jarvis-Android-unsigned.apk Jarvis-Android-verification-unsigned.apk --clobber

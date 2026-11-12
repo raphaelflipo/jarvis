@@ -43,7 +43,8 @@ final class JarvisViewController: UIViewController, WKNavigationDelegate, WKUIDe
                     switch result {
                     case .success:
                         let offline = ProcessInfo.processInfo.arguments.contains("--test-offline")
-                        self.web.load(URLRequest(url:URL(string:self.origin + "?offline=" + (offline ? "1":"0"))!))
+                        let model=ProcessInfo.processInfo.arguments.contains("--test-french") ? "balanced":"small"
+                        self.web.load(URLRequest(url:URL(string:self.origin + "?offline=" + (offline ? "1":"0") + "&model=" + model)!))
                     case .failure: self.failure("Le service local ne peut pas démarrer. Fermez Jarvis puis réessayez.")
                     }
                 }
