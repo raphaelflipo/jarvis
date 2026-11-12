@@ -20,7 +20,9 @@ public class LocalInferenceTest {
             while((n=in.read(chunk))!=-1) out.write(chunk,0,n);
             js=out.toString("UTF-8");
         }
+        String phase=InstrumentationRegistry.getArguments().getString("jarvis_phase");
         for(boolean offline:new boolean[]{false,true}) {
+            if(phase!=null && offline != phase.equals("offline")) continue;
             Intent intent=new Intent(Intent.ACTION_MAIN).setClassName("io.github.raphaelflipo.jarvis","io.github.raphaelflipo.jarvis.MainActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Activity activity=getInstrumentation().startActivitySync(intent);
             Thread.sleep(4000);
