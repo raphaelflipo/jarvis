@@ -5,7 +5,7 @@ on:
     branches: ['release/native-finalization-*']
     paths: ['.github/workflows/android-signed-validation.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify:
     runs-on: ubuntu-latest
