@@ -105,7 +105,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let model=config()["model"] as? String ?? "qwen3:1.7b"
         let alert=NSAlert()
         alert.messageText="Installer le modèle local"
-        alert.informativeText="Jarvis utilise \(model). Le téléchargement initial nécessite Internet et environ 1,4 Go pour le modèle proposé. Les conversations restent sur le Mac. Vous pourrez relancer cette étape dans le menu Jarvis."
+        let size=model == "qwen3:1.7b" ? "environ 1,4 Go" : model == "qwen3:8b" ? "environ 5,2 Go" : "une taille dépendant du modèle"
+        alert.informativeText="Jarvis utilise \(model). Le téléchargement initial nécessite Internet et \(size). Les conversations restent sur le Mac. Vous pourrez relancer cette étape dans le menu Jarvis."
         alert.addButton(withTitle:"Télécharger"); alert.addButton(withTitle:"Plus tard")
         guard alert.runModal() == .alertFirstButtonReturn else {return}
         let progress=NSAlert(); progress.messageText="Téléchargement de \(model)…"
@@ -125,7 +126,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             output.fileHandleForReading.readabilityHandler=nil
             if success {
                 var settings=self.config();settings["model"]=model
-                if let data=try? JSONSerialization.data(withJSONObject:settings,options:[.prettyPrinted,.sortedKeys]) {try? data.write(to:self.jarvisDir.appendingPathComponent("config.json"),options:.atomic)}
+                if let data=try? JSONSerialization.data(withJSONObject:settings,options:[.prettyPrinted,.sortedKeys]) {
+                    let file=self.jarvisDir.appendingPathComponent("config.json")
+                    try? data.write(to:file,options:.atomic)
+                    try? FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:file.path)
+                }
             }
             DispatchQueue.main.async {
                 if progress.window.sheetParent != nil {self.window.endSheet(progress.window)}

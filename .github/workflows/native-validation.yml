@@ -8,9 +8,28 @@ on:
         default: false
   push:
     branches: ['release/native-finalization-*', 'codex/native-finalization-*']
+    paths: ['jarvis/**', 'macos/**', 'native/**', 'local-app/**', 'tests/**', 'requirements*']
 permissions:
   contents: read
 jobs:
+  backend:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python -m pip install -r requirements-macos.lock
+      - name: Verify backend and recovery regressions
+        run: |
+          python tests/test_offline.py > backend-tests.txt
+          python -m unittest discover -s tests -p test_release_quality.py
+          python -m unittest discover -s tests -p test_packaging.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Backend-macOS
+          path: backend-tests.txt
   windows:
     permissions:
       contents: write
