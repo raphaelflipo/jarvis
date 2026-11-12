@@ -68,10 +68,11 @@ def index_all(cfg: dict, progress=None) -> dict:
         _running.release()
 
 
-def watch(cfg_getter):
+def watch(cfg_getter, stopped=None):
     """Fil de fond du hub : réindexe toutes les 30 min, seulement sur secteur."""
     first = True
-    while True:
+    stopped = stopped or threading.Event()
+    while not stopped.is_set():
         cfg = cfg_getter()
         if (cfg.get("my_files") or {}).get("enabled"):
             try:
@@ -82,7 +83,7 @@ def watch(cfg_getter):
             if first or on_ac:
                 index_all(cfg)
                 first = False
-        time.sleep(1800)
+        stopped.wait(1800)
 
 
 @tool("search_my_files",

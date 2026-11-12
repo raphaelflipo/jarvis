@@ -139,7 +139,7 @@ check('(subpath "%s")' % (home / ".ssh") in prof and "(deny file-read* file-writ
 check("(deny network-outbound)" in prof and "mDNSResponder" in prof, "réseau + DNS coupés quand demandé")
 check("/opt/homebrew" not in prof, "Homebrew non modifiable après contenu externe")
 check("network-outbound" not in sandbox.profile([WS], network=True, allow_brew=True), "réseau autorisé sinon")
-check(sandbox.eligible_cwd(home / "Projets" / "App") and not sandbox.eligible_cwd(home) and
+check(sandbox.eligible_cwd(home / "Projets" / "App", {"project_dirs": [str(home / "Projets" / "App")]}) and not sandbox.eligible_cwd(home) and
       not sandbox.eligible_cwd(home / "Documents") and not sandbox.eligible_cwd(home / ".config" / "x"), "dossier courant éligible seulement si c'est un projet")
 
 # ================================================================== 4

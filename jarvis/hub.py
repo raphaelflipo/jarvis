@@ -326,6 +326,7 @@ class Session:
 class Hub:
     def __init__(self, cfg: dict):
         self.cfg = cfg
+        self.stopped = threading.Event()
         self.token = get_token()
         self.sessions: dict[str, Session] = {}
         self.loop: asyncio.AbstractEventLoop | None = None
@@ -335,15 +336,17 @@ class Hub:
         self.manager.warmup()
         self.power = diagnostics.power_state()
         self.manager.set_thermal(self.power.get("thermal"))
-        threading.Thread(target=self._watch_power, daemon=True, name="jarvis-power").start()
+        self.power_thread = threading.Thread(target=self._watch_power, daemon=True, name="jarvis-power")
+        self.power_thread.start()
         threading.Thread(target=self._ensure_nightly, daemon=True, name="jarvis-nightly").start()
         threading.Thread(target=self._warmup, daemon=True, name="jarvis-warmup").start()
-        threading.Thread(target=myfiles.watch, args=(lambda: self.cfg,), daemon=True, name="jarvis-myfiles").start()
+        threading.Thread(target=myfiles.watch, args=(lambda: self.cfg, self.stopped), daemon=True, name="jarvis-myfiles").start()
 
     def _warmup(self):
         """Préchauffage : le modèle lit tout de suite les instructions de base et les outils du noyau, gardés en
         mémoire. La première vraie demande démarre alors en quelques secondes au lieu d'une minute."""
-        time.sleep(3)
+        if self.stopped.wait(3):
+            return
         try:
             import registry
             from core import Agent
@@ -357,7 +360,7 @@ class Hub:
     def _ensure_nightly(self):
         """Contrôle automatique (banc d'essai quand le Mac est branché et inutilisé) : service installé si activé."""
         try:
-            if sys.platform == "darwin" and self.cfg.get("nightly", True) and not nightly.installed():
+            if sys.platform == "darwin" and self.cfg.get("nightly", False) and not nightly.installed():
                 nightly.install()
         except Exception as e:
             log(f"[contrôle automatique] {e}")
@@ -390,8 +393,7 @@ class Hub:
     # ---------------------------------------------------------------- diffusion (appelée depuis les threads des tâches)
     def _watch_power(self):
         """Prévient l'interface quand le Mac passe sur batterie (modèle plus lent) ou revient sur secteur."""
-        while True:
-            time.sleep(20)
+        while not self.stopped.wait(20):
             p = diagnostics.power_state()
             self.manager.set_thermal(p.get("thermal"))
             if p != self.power:
@@ -400,14 +402,24 @@ class Hub:
                 self.power = p
                 self.broadcast({"type": "power", "power": {**p, "parallel": self.manager.effective_parallel()}})
 
+    def stop(self):
+        self.stopped.set()
+        self.loop = None
+        if threading.current_thread() is not self.power_thread:
+            self.power_thread.join(timeout=2)
+
     def broadcast(self, msg: dict):
         loop = self.loop
-        if not loop or not self.sessions:
+        if self.stopped.is_set() or not loop or loop.is_closed() or not loop.is_running() or not self.sessions:
             return
         data = json.dumps(msg, ensure_ascii=False, default=str)
         for s in list(self.sessions.values()):
             if s.attached:
-                asyncio.run_coroutine_threadsafe(s.send(data), loop)
+                coroutine = s.send(data)
+                try:
+                    asyncio.run_coroutine_threadsafe(coroutine, loop)
+                except RuntimeError:
+                    coroutine.close()
 
     # ---------------------------------------------------------------- sessions
     async def open(self, kind: str, ip: str, remote: bool, ws=None) -> Session:

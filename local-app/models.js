@@ -8,7 +8,11 @@ export function modelURL(key, file = 'onnx/model_quantized.onnx') {
   if (!m) throw new Error('Modèle inconnu');
   return `https://huggingface.co/${m.id}/resolve/${m.revision}/${file}`;
 }
+export function restoreHistory(messages) {
+  if (!Array.isArray(messages)) return [];
+  return messages.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.content === 'string' && m.content.trim())
+    .slice(-40).map(m => ({ role: m.role, content: m.content.slice(0, 16000) }));
+}
 export function boundedHistory(messages) {
-  return messages.filter(m => ['user', 'assistant'].includes(m.role) && typeof m.content === 'string' && m.content.trim())
-    .slice(-12).map(m => ({ role: m.role, content: m.content.slice(0, 4000) }));
+  return restoreHistory(messages).slice(-12).map(m => ({ role: m.role, content: m.content.slice(0, 4000) }));
 }

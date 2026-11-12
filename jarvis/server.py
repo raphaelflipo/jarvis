@@ -31,7 +31,9 @@ _safe_project_dir = safe_project_dir   # compatibilité
 def sniff_ext(p: Path) -> str:
     """Extension d'après les premiers octets (fichier partagé depuis l'iPhone sans nom)."""
     try:
-        head = p.read_bytes()[:64]
+        with p.open("rb") as stream:
+            sample = stream.read(20000)
+        head = sample[:64]
     except OSError:
         return ""
     if head.startswith(b"\xff\xd8\xff"):
@@ -49,7 +51,7 @@ def sniff_ext(p: Path) -> str:
     if head.startswith(b"PK\x03\x04"):
         return ".zip"
     try:
-        p.read_bytes()[:20000].decode("utf-8")
+        sample.decode("utf-8", errors="strict")
         return ".txt"                              # texte ou lien partagé depuis Safari
     except UnicodeDecodeError:
         return ""
@@ -74,8 +76,15 @@ def create_app(cfg: dict):
                 hub.reap()
         task = asyncio.create_task(reaper())
         log(f"Jarvis {config.VERSION} prêt sur http://127.0.0.1:{cfg['server']['port']}")
-        yield
-        task.cancel()
+        try:
+            yield
+        finally:
+            hub.stop()
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")

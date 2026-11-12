@@ -1,4 +1,4 @@
-import { MODEL_CACHE, MODELS, modelURL, boundedHistory } from './models.js';
+import { MODEL_CACHE, MODELS, modelURL, boundedHistory, restoreHistory } from './models.js';
 const $ = id => document.getElementById(id);
 const storeKey = 'jarvis-local-history-v1';
 const welcomeTemplate = $('messages').querySelector('.empty-state')?.cloneNode(true);
@@ -6,7 +6,7 @@ let worker, ready = false, busy = false, loadedKey, generating = false, installP
 let operation = 0;
 let deleting = false;
 let messages = [];
-try { messages = boundedHistory(JSON.parse(localStorage.getItem(storeKey) || '[]')); } catch { /* Storage is optional. */ }
+try { messages = restoreHistory(JSON.parse(localStorage.getItem(storeKey) || '[]')); } catch { /* Storage is optional. */ }
 try { const selected = localStorage.getItem('jarvis-local-model'); if (MODELS[selected]) $('model-select').value = selected; } catch { /* Optional preference. */ }
 const modelNote = document.createElement('p');
 modelNote.className = 'muted'; modelNote.id = 'model-note';
@@ -170,7 +170,9 @@ $('install-button').addEventListener('click', async () => {
 });
 window.addEventListener('appinstalled', () => { $('install-button').hidden = true; navigator.storage?.persist?.(); });
 for (const name of ['online', 'offline']) window.addEventListener(name, () => { if (ready && !busy) readyStatus(); else if (!busy) status(navigator.onLine ? 'Modèle à charger' : 'Hors connexion · Chargez un modèle déjà téléchargé'); });
-if ('serviceWorker' in navigator && window.isSecureContext) {
+if (document.querySelector('meta[name="jarvis-native"]')) {
+  shellCached = true;
+} else if ('serviceWorker' in navigator && window.isSecureContext) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).then(async registration => {
     await navigator.serviceWorker.ready;
     shellCached = true; if (ready && !busy) readyStatus();

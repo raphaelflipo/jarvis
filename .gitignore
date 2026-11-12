@@ -4,3 +4,20 @@ __pycache__/
 dist/
 .venv/
 *.shortcut
+
+# Ressources générées depuis local-app par native/prepare.py
+native/windows/app/
+native/windows/node_modules/
+native/windows/dist/
+native/windows/icon.ico
+native/windows/selftest.js
+native/android/.gradle/
+native/android/local.properties
+native/android/app/build/
+native/android/app/src/main/assets/
+native/android/app/src/main/res/mipmap-*/
+native/ios/app/
+native/ios/selftest.js
+native/ios/Assets.xcassets/
+native/ios/build/
+native/android/app/src/androidTest/assets/

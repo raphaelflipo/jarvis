@@ -1,0 +1,90 @@
+name: Native builds and local inference
+on:
+  workflow_dispatch:
+  push:
+    branches: ['release/native-finalization-*', 'codex/native-finalization-*']
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python -m pip install pillow
+      - run: python native/prepare.py
+      - run: npm ci
+        working-directory: native/windows
+      - run: npm run dist
+        working-directory: native/windows
+      - name: Install and verify the packaged application twice
+        shell: pwsh
+        run: |
+          $installer = (Get-ChildItem native/windows/dist/*Setup.exe)[0].FullName
+          Start-Process -Wait -FilePath $installer -ArgumentList '/S'
+          $exe = "$env:LOCALAPPDATA\Programs\Jarvis\Jarvis.exe"
+          if (!(Test-Path $exe)) { throw 'Installed application missing' }
+          $env:JARVIS_TEST_PROFILE = "$env:RUNNER_TEMP\jarvis-profile"
+          foreach ($phase in @('online','offline')) {
+            $env:JARVIS_TEST_REPORT = "$env:GITHUB_WORKSPACE\$phase.json"
+            $env:JARVIS_TEST_OFFLINE = if ($phase -eq 'offline') {'1'} else {'0'}
+            $process = Start-Process -PassThru -FilePath $exe
+            if (!$process.WaitForExit(660000)) { $process.Kill(); throw 'Inference timeout' }
+            $report = Get-Content $env:JARVIS_TEST_REPORT | ConvertFrom-Json
+            if (!$report.ok) { throw ($report | ConvertTo-Json) }
+          }
+          Get-AuthenticodeSignature $installer | Format-List Status,StatusMessage | Out-File signature.txt
+          Get-FileHash $installer -Algorithm SHA256 | Format-List | Out-File sha256.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-x64
+          path: |
+            native/windows/dist/*Setup.exe
+            online.json
+            offline.json
+            signature.txt
+            sha256.txt
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python -m pip install pillow
+      - run: python native/prepare.py
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.11.1' }
+      - run: gradle -p native/android assembleRelease assembleDebug assembleDebugAndroidTest
+      - name: Local inference, cache and history on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install native/android/app/build/outputs/apk/debug/app-debug.apk
+            adb install native/android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w io.github.raphaelflipo.jarvis.test/android.test.InstrumentationTestRunner | tee android-test.txt
+            adb shell run-as io.github.raphaelflipo.jarvis cat files/online.json > android-online.json
+            adb shell run-as io.github.raphaelflipo.jarvis cat files/offline.json > android-offline.json
+            python -c "import json; assert json.load(open('android-online.json'))['ok']; assert json.load(open('android-offline.json'))['ok']"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android
+          path: |
+            native/android/app/build/outputs/apk/release/*.apk
+            native/android/app/build/outputs/apk/debug/*.apk
+            native/android/app/build/outputs/apk/androidTest/debug/*.apk
+            android-*.json
+            android-test.txt

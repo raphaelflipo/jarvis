@@ -37,17 +37,13 @@ def _q(p: Path | str) -> str:
     return '"' + str(p).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def eligible_cwd(cwd: Path) -> bool:
-    """Le dossier courant devient inscriptible s'il s'agit d'un vrai dossier de projet de l'utilisateur."""
+def eligible_cwd(cwd: Path, cfg: dict | None = None) -> bool:
+    """Seuls l'espace de travail et les projets explicitement autorisés sont inscriptibles."""
+    cfg = cfg or {}
+    roots = [Path(cfg.get("workspace", HOME / "JarvisWorkspace")).expanduser()]
+    roots += [Path(d).expanduser() for d in cfg.get("project_dirs", [])]
     c = security.resolve(cwd)
-    if not security.under(c, HOME) or c == HOME:
-        return False
-    rel = c.relative_to(HOME).parts
-    if rel[0].startswith(".") or rel[0] in ("Library", "Applications"):
-        return False
-    if len(rel) == 1 and rel[0] in ("Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures", "Public"):
-        return False  # jamais un dossier personnel entier
-    return True
+    return any(security.under(c, security.resolve(root)) for root in roots)
 
 
 def profile(writable: list[Path], network: bool, allow_brew: bool) -> str:
@@ -100,20 +96,20 @@ def available() -> bool:
 
 def wrap(argv: list[str], cwd: Path, cfg: dict, network: bool, tainted: bool) -> tuple[list[str], bool]:
     """Renvoie (commande éventuellement enveloppée, sandbox_active)."""
-    if not cfg.get("sandbox", True) or not available():
+    if not cfg.get("sandbox", True):
         return argv, False
+    if not available():
+        raise RuntimeError("Bac à sable indisponible : commande refusée. Vérifie les réglages de sécurité.")
     writable = [Path(cfg.get("workspace", HOME / "JarvisWorkspace")).expanduser()]
     writable += [Path(d).expanduser() for d in cfg.get("project_dirs", [])]
     if cfg.get("dev_venv"):
         writable.append(Path(cfg["dev_venv"]).expanduser())
-    if eligible_cwd(cwd):
-        writable.append(cwd)
     prof = profile(writable, network=network, allow_brew=not tainted)
     return ["/usr/bin/sandbox-exec", "-p", prof, *argv], True
 
 
 SANDBOX_HINT = ("\n[bac à sable] Une écriture ou une lecture a été bloquée. Jarvis ne peut écrire que dans l'espace de "
-                "travail, les dossiers projets autorisés et le dossier courant d'un projet. Pour autoriser un dossier : "
+                "travail, les dossiers projets autorisés explicitement autorisés. Pour autoriser un dossier : "
                 "Réglages › Dossiers projets (ou `jarvis allow ~/chemin`). Pour git push / gh / firebase / ssh, "
                 "utilise les outils dédiés `git`, `github`, `firebase`, `ssh_run`.")
 NETWORK_HINT = ("\n[bac à sable] Réseau coupé : cette tâche a lu du contenu externe, les commandes tournent donc sans "

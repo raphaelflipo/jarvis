@@ -4,6 +4,8 @@ Registre des outils, contexte PAR TÂCHE (thread-local, pour les tâches parall�
 from __future__ import annotations
 
 import datetime
+import hashlib
+import uuid
 import json
 import os
 import re
@@ -104,14 +106,38 @@ def trunc(s: str, n: int = MAX_OUT) -> str:
 
 
 # =============================================================== verrous partagés
-_path_locks: dict[str, threading.Lock] = {}
+class FileLock:
+    """Verrou réentrant ; enregistre l'état final avant de libérer un fichier sauvegardé."""
+    def __init__(self, path):
+        self.path = Path(path)
+        self.lock = threading.RLock()
+
+    def acquire(self, *args, **kwargs):
+        return self.lock.acquire(*args, **kwargs)
+
+    def release(self):
+        try:
+            if Ctx.backups:
+                Ctx.backups.after_write(self.path)
+        finally:
+            self.lock.release()
+
+    def __enter__(self):
+        self.acquire()
+        return self
+
+    def __exit__(self, *args):
+        self.release()
+
+
+_path_locks: dict[str, FileLock] = {}
 _path_guard = threading.Lock()
 
 
-def path_lock(p: Path) -> threading.Lock:
+def path_lock(p: Path) -> FileLock:
     key = str(security.resolve(p))
     with _path_guard:
-        return _path_locks.setdefault(key, threading.Lock())
+        return _path_locks.setdefault(key, FileLock(key))
 
 
 class GuiOwner:
@@ -172,38 +198,92 @@ class Backups:
                 return
             self.manifest.append(entry)
             self.dir.mkdir(parents=True, exist_ok=True)
-            (self.dir / "manifest.json").write_text(json.dumps(self.manifest, indent=1, ensure_ascii=False))
+            self._save()
+
+    @staticmethod
+    def fingerprint(path: Path) -> str:
+        if path.is_symlink():
+            return "symlink:" + os.readlink(path)
+        if not path.exists():
+            return "missing"
+        if not path.is_file():
+            return "directory"
+        h = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                h.update(chunk)
+        return "sha256:" + h.hexdigest()
+
+    def after_write(self, path: Path):
+        key = str(security.resolve(path))
+        with self.lock:
+            for entry in self.manifest:
+                if entry["path"] == key and not entry.get("undone"):
+                    entry["after"] = self.fingerprint(path)
+                    self._save()
+                    break
+
+    def _save(self):
+        self.dir.mkdir(parents=True, exist_ok=True)
+        temp = self.dir / ("manifest-" + uuid.uuid4().hex + ".tmp")
+        temp.write_text(json.dumps(self.manifest, indent=1, ensure_ascii=False))
+        temp.replace(self.dir / "manifest.json")
 
     @staticmethod
     def for_task(task_id: str) -> Path | None:
         d = config.BACKUP_DIR / task_id
-        return d if (d / "manifest.json").exists() else None
+        try:
+            entries = json.loads((d / "manifest.json").read_text())
+            return d if any(not e.get("undone") for e in entries) else None
+        except (OSError, ValueError):
+            return None
 
     @staticmethod
     def list_tasks() -> list[Path]:
         if not config.BACKUP_DIR.exists():
             return []
-        dirs = [d for d in config.BACKUP_DIR.iterdir() if (d / "manifest.json").exists()]
+        dirs = [d for d in config.BACKUP_DIR.iterdir() if Backups.for_task(d.name)]
         return sorted(dirs, key=lambda d: (d / "manifest.json").stat().st_mtime, reverse=True)
 
     @staticmethod
     def undo(task_dir: Path) -> str:
-        man = json.loads((task_dir / "manifest.json").read_text())
-        trash = Path.home() / ".Trash"
-        trash.mkdir(exist_ok=True)
-        done = []
-        for e in reversed(man):
-            p = Path(e["path"])
-            if e["backup"]:
-                p.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(e["backup"], p)
-                done.append(f"restauré : {p}")
-            elif p.exists():
-                dest = trash / f"{p.name}.jarvis-{int(time.time())}"
-                shutil.move(str(p), dest)
-                done.append(f"mis à la Corbeille (créé par Jarvis) : {p}")
-        shutil.rmtree(task_dir, ignore_errors=True)
-        return "\n".join(done) or "Rien à annuler."
+        manifest_path = task_dir / "manifest.json"
+        # Le verrou de manifeste sérialise deux demandes d'annulation de la même tâche.
+        with path_lock(manifest_path).lock:
+            man = json.loads(manifest_path.read_text())
+            recovery = task_dir / ("recovery-" + uuid.uuid4().hex)
+            done = []
+            for i, e in reversed(list(enumerate(man))):
+                if e.get("undone"):
+                    continue
+                p = Path(e["path"])
+                with path_lock(p).lock:
+                    current = Backups.fingerprint(p)
+                    if "after" not in e or current != e["after"]:
+                        done.append(f"Conflit : {p} a changé ou son état final est inconnu. Fichier conservé ; original dans {task_dir}.")
+                        continue
+                    if current in ("directory",) or current.startswith("symlink:"):
+                        done.append(f"Conflit : type de fichier modifié : {p}. Fichier conservé.")
+                        continue
+                    recovery.mkdir(parents=True, exist_ok=True)
+                    if p.is_file():
+                        checkpoint = recovery / f"{i:04d}_{p.name}"
+                        shutil.copy2(p, checkpoint)
+                        e["recovery"] = str(checkpoint)
+                    if e["backup"]:
+                        p.parent.mkdir(parents=True, exist_ok=True)
+                        temp = p.with_name(p.name + ".jarvis-" + uuid.uuid4().hex)
+                        shutil.copy2(e["backup"], temp)
+                        temp.replace(p)
+                        done.append(f"restauré : {p}")
+                    elif p.is_file():
+                        p.unlink()  # copie récupérable conservée dans recovery
+                        done.append(f"retiré (copie récupérable : {e['recovery']}) : {p}")
+                    e["undone"] = True
+                    temp_manifest = task_dir / ("undo-" + uuid.uuid4().hex + ".tmp")
+                    temp_manifest.write_text(json.dumps(man, indent=1, ensure_ascii=False))
+                    temp_manifest.replace(manifest_path)
+            return "\n".join(done) or "Rien à annuler."
 
     @staticmethod
     def prune(keep: int = 60):

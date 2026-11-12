@@ -246,3 +246,12 @@ test('activation removes obsolete app shells while preserving models and other s
   for (const name of current) assert.equal(sw.stores.has(name), true);
   assert.equal(sw.claimed, true);
 });
+
+test('reopening keeps forty messages while model context remains bounded', async () => {
+  const { restoreHistory } = await import(`data:text/javascript;base64,${Buffer.from(modelSource).toString('base64')}`);
+  const history = Array.from({ length: 40 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: `message ${i}` }));
+  assert.equal(restoreHistory(JSON.parse(JSON.stringify(history))).length, 40);
+  assert.equal(boundedHistory(history).length, 12);
+  assert.deepEqual(restoreHistory({}), []);
+  assert.deepEqual(restoreHistory([null, { role: 'system', content: 'bad' }]), []);
+});
