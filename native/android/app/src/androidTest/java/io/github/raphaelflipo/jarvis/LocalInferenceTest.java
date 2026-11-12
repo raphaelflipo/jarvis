@@ -46,4 +46,34 @@ public class LocalInferenceTest {
             Thread.sleep(2000);
         }
     }
+    @Test public void testVisualLayoutAndKeyboard() throws Exception {
+        Intent intent=new Intent(Intent.ACTION_MAIN).setClassName("io.github.raphaelflipo.jarvis","io.github.raphaelflipo.jarvis.MainActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Activity activity=getInstrumentation().startActivitySync(intent);
+        Thread.sleep(3000);
+        WebView web=(WebView)((ViewGroup)activity.findViewById(android.R.id.content)).getChildAt(0);
+        assertNotNull(web);
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').click()",null));
+        AtomicReference<Boolean> ready=new AtomicReference<>(false);
+        for(int i=0;i<120 && !ready.get();i++) {
+            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("!document.getElementById('prompt').disabled",v->ready.set("true".equals(v))));
+            Thread.sleep(1000);
+        }
+        assertTrue("Le modèle doit être chargé dans l'interface",ready.get());
+        File folder=getInstrumentation().getTargetContext().getExternalFilesDir(null);
+        try(FileOutputStream output=new FileOutputStream(new File(folder,"before-keyboard.png"))) {
+            getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
+        }
+        getInstrumentation().runOnMainSync(()-> {
+            web.requestFocus();
+            web.evaluateJavascript("document.getElementById('prompt').focus();document.getElementById('prompt').value='Bonjour';",null);
+            ((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).showSoftInput(web,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+        });
+        Thread.sleep(2500);
+        try(FileOutputStream output=new FileOutputStream(new File(folder,"with-keyboard.png"))) {
+            getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
+        }
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("JSON.stringify({viewportHeight:innerHeight,visualHeight:visualViewport.height,promptBottom:document.getElementById('prompt').getBoundingClientRect().bottom,headerTop:document.querySelector('.app-header').getBoundingClientRect().top,documentWidth:document.documentElement.scrollWidth,viewportWidth:innerWidth})",value->{android.os.Bundle report=new android.os.Bundle();report.putString("jarvis_layout",value);getInstrumentation().sendStatus(0,report);}));
+        getInstrumentation().runOnMainSync(activity::finish);
+    }
+
 }
