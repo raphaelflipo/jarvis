@@ -92,9 +92,11 @@ public class LocalInferenceTest {
         try(FileOutputStream output=new FileOutputStream(new File(folder,"before-keyboard.png"))) {
             getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
         }
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('prompt').scrollIntoView({block:'center',behavior:'instant'})",null));
+        Thread.sleep(700);
         java.util.concurrent.CountDownLatch positioned=new java.util.concurrent.CountDownLatch(1);
         float[] point=new float[2];
-        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const p=document.getElementById('prompt');p.scrollIntoView({block:'center',behavior:'instant'});const r=p.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const p=document.getElementById('prompt');const r=p.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
             try {
                 org.json.JSONObject coordinates=new org.json.JSONObject(value);
                 int[] location=new int[2];web.getLocationOnScreen(location);
