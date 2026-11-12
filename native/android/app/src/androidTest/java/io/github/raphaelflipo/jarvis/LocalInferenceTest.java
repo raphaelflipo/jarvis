@@ -55,7 +55,7 @@ public class LocalInferenceTest {
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').click()",null));
         AtomicReference<Boolean> ready=new AtomicReference<>(false);
         for(int i=0;i<120 && !ready.get();i++) {
-            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("!document.getElementById('prompt').disabled",v->ready.set("true".equals(v))));
+            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').textContent === 'Modèle chargé'",v->ready.set("true".equals(v))));
             Thread.sleep(1000);
         }
         assertTrue("Le modèle doit être chargé dans l'interface",ready.get());
@@ -63,12 +63,27 @@ public class LocalInferenceTest {
         try(FileOutputStream output=new FileOutputStream(new File(folder,"before-keyboard.png"))) {
             getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
         }
-        getInstrumentation().runOnMainSync(()-> {
-            web.requestFocus();
-            web.evaluateJavascript("document.getElementById('prompt').focus();document.getElementById('prompt').value='Bonjour';",null);
-            ((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).showSoftInput(web,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-        });
+        java.util.concurrent.CountDownLatch positioned=new java.util.concurrent.CountDownLatch(1);
+        float[] point=new float[2];
+        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const p=document.getElementById('prompt');p.scrollIntoView({block:'center',behavior:'instant'});const r=p.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
+            try {
+                org.json.JSONObject coordinates=new org.json.JSONObject(value);
+                int[] location=new int[2];web.getLocationOnScreen(location);
+                float scale=(float)(web.getWidth()/coordinates.getDouble("width"));
+                point[0]=location[0]+(float)coordinates.getDouble("x")*scale;
+                point[1]=location[1]+(float)coordinates.getDouble("y")*scale;
+            } catch(Exception error) { throw new RuntimeException(error); }
+            positioned.countDown();
+        }));
+        assertTrue(positioned.await(5,java.util.concurrent.TimeUnit.SECONDS));
+        long now=android.os.SystemClock.uptimeMillis();
+        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,now,android.view.MotionEvent.ACTION_DOWN,point[0],point[1],0));
+        Thread.sleep(80);
+        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,android.os.SystemClock.uptimeMillis(),android.view.MotionEvent.ACTION_UP,point[0],point[1],0));
         Thread.sleep(2500);
+        AtomicReference<Integer> keyboardInset=new AtomicReference<>(0);
+        getInstrumentation().runOnMainSync(()->keyboardInset.set(activity.getWindow().getDecorView().getRootWindowInsets().getInsets(android.view.WindowInsets.Type.ime()).bottom));
+        assertTrue("Le clavier logiciel doit être visible",keyboardInset.get()>0);
         try(FileOutputStream output=new FileOutputStream(new File(folder,"with-keyboard.png"))) {
             getInstrumentation().getUiAutomation().takeScreenshot().compress(android.graphics.Bitmap.CompressFormat.PNG,100,output);
         }
