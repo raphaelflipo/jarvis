@@ -21,14 +21,30 @@ public class LocalInferenceTest {
         }
         return null;
     }
-    private void tapElement(WebView web,String id) throws Exception {
-        java.util.concurrent.CountDownLatch positioned=new java.util.concurrent.CountDownLatch(1);float[] point=new float[2];
-        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const r=document.getElementById('"+id+"').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
-            try {org.json.JSONObject c=new org.json.JSONObject(value);int[] location=new int[2];web.getLocationOnScreen(location);float scale=(float)(web.getWidth()/c.getDouble("width"));point[0]=location[0]+(float)c.getDouble("x")*scale;point[1]=location[1]+(float)c.getDouble("y")*scale;}catch(Exception e){throw new RuntimeException(e);}positioned.countDown();
+    private void tapElement(WebView web, String id) throws Exception {
+        java.util.concurrent.CountDownLatch positioned = new java.util.concurrent.CountDownLatch(1);
+        float[] point = new float[2];
+        String center = "(()=>{const r=document.getElementById('" + id
+            + "').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()";
+        getInstrumentation().runOnMainSync(() -> web.evaluateJavascript(center, value -> {
+            try {
+                org.json.JSONObject coordinates = new org.json.JSONObject(value);
+                float scale = (float)(web.getWidth() / coordinates.getDouble("width"));
+                point[0] = (float)coordinates.getDouble("x") * scale;
+                point[1] = (float)coordinates.getDouble("y") * scale;
+            } catch (Exception error) { throw new RuntimeException(error); }
+            positioned.countDown();
         }));
-        assertTrue(positioned.await(5,java.util.concurrent.TimeUnit.SECONDS));long now=android.os.SystemClock.uptimeMillis();
-        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,now,android.view.MotionEvent.ACTION_DOWN,point[0],point[1],0));Thread.sleep(80);
-        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,android.os.SystemClock.uptimeMillis(),android.view.MotionEvent.ACTION_UP,point[0],point[1],0));
+        assertTrue(positioned.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        long down = android.os.SystemClock.uptimeMillis();
+        for (int action : new int[]{android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP}) {
+            getInstrumentation().runOnMainSync(() -> {
+                android.view.MotionEvent event = android.view.MotionEvent.obtain(down,
+                    android.os.SystemClock.uptimeMillis(), action, point[0], point[1], 0);
+                try { web.dispatchTouchEvent(event); } finally { event.recycle(); }
+            });
+            if (action == android.view.MotionEvent.ACTION_DOWN) Thread.sleep(80);
+        }
     }
     @Test public void testLocalModelAndReopen() throws Exception {
         String js;
@@ -94,23 +110,7 @@ public class LocalInferenceTest {
         }
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('prompt').scrollIntoView({block:'center',behavior:'instant'})",null));
         Thread.sleep(700);
-        java.util.concurrent.CountDownLatch positioned=new java.util.concurrent.CountDownLatch(1);
-        float[] point=new float[2];
-        getInstrumentation().runOnMainSync(()->web.evaluateJavascript("(()=>{const p=document.getElementById('prompt');const r=p.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,width:innerWidth};})()",value->{
-            try {
-                org.json.JSONObject coordinates=new org.json.JSONObject(value);
-                int[] location=new int[2];web.getLocationOnScreen(location);
-                float scale=(float)(web.getWidth()/coordinates.getDouble("width"));
-                point[0]=location[0]+(float)coordinates.getDouble("x")*scale;
-                point[1]=location[1]+(float)coordinates.getDouble("y")*scale;
-            } catch(Exception error) { throw new RuntimeException(error); }
-            positioned.countDown();
-        }));
-        assertTrue(positioned.await(5,java.util.concurrent.TimeUnit.SECONDS));
-        long now=android.os.SystemClock.uptimeMillis();
-        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,now,android.view.MotionEvent.ACTION_DOWN,point[0],point[1],0));
-        Thread.sleep(80);
-        getInstrumentation().sendPointerSync(android.view.MotionEvent.obtain(now,android.os.SystemClock.uptimeMillis(),android.view.MotionEvent.ACTION_UP,point[0],point[1],0));
+        tapElement(web, "prompt");
         Thread.sleep(2500);
         AtomicReference<Integer> keyboardInset=new AtomicReference<>(0);
         getInstrumentation().runOnMainSync(()->keyboardInset.set(activity.getWindow().getDecorView().getRootWindowInsets().getInsets(android.view.WindowInsets.Type.ime()).bottom));
