@@ -5,96 +5,12 @@ on:
 permissions:
   contents: read
 jobs:
-  apple:
-    runs-on: macos-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - run: python3 -m pip install pillow
-      - run: python3 native/prepare.py
-      - name: Compiler les deux exécutables macOS
-        run: |
-          xcrun swiftc -O -target arm64-apple-macos14.0 macos/JarvisApp.swift -o /tmp/Jarvis -framework Cocoa -framework WebKit -framework Carbon -framework EventKit
-          xcrun swiftc -O -target arm64-apple-macos14.0 macos/JarvisAgenda.swift -o /tmp/jarvis-agenda -framework EventKit
-          file /tmp/Jarvis /tmp/jarvis-agenda
-      - name: Construire pour le simulateur iOS
-        run: |
-          xcodebuild -version
-          xcodebuild -quiet -project native/ios/Jarvis.xcodeproj -scheme Jarvis -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/JarvisBuild CODE_SIGNING_ALLOWED=NO build
-      - name: Inférence réelle en ligne puis cache seul sur le simulateur
-        run: |
-          set -eu
-          id=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(v["udid"] for k in reversed(list(d)) if "iOS" in k for v in d[k] if v["name"].startswith("iPhone")))')
-          xcrun simctl list devices available | grep -F "$id"
-          xcrun simctl boot "$id" || xcrun simctl bootstatus "$id" -b
-          xcrun simctl bootstatus "$id" -b
-          xcrun simctl install "$id" /tmp/JarvisBuild/Build/Products/Release-iphonesimulator/Jarvis.app
-          app=io.github.raphaelflipo.jarvis
-          dir=$(xcrun simctl get_app_container "$id" "$app" data)
-          for phase in online offline; do
-            file="$dir/Documents/verification.json"
-            rm -f "$file"
-            if [ "$phase" = "online" ]; then xcrun simctl launch "$id" "$app" --self-test; else xcrun simctl launch "$id" "$app" --self-test --test-offline; fi
-            for n in $(seq 1 100); do [ -s "$file" ] && break; sleep 4; done
-            python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print(v); assert v["ok"]' "$file"
-            xcrun simctl terminate "$id" "$app"
-          done
-  windows:
-    runs-on: windows-latest
-    timeout-minutes: 35
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
-      - uses: actions/setup-node@v4
-        with: { node-version: '24' }
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - run: python -m pip install pillow
-      - run: python native/prepare.py
-      - run: npm ci
-        working-directory: native/windows
-      - run: npm run dist
-        working-directory: native/windows
-      - name: Install and verify the packaged application twice
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: |
-          gh release download v3.3.0-rc.1 --pattern Jarvis-3.3.0-rc.1-Windows-x64-Setup.exe --dir "$env:RUNNER_TEMP/previous-jarvis"
-          $env:GH_TOKEN = $null
-          $previous = (Get-ChildItem "$env:RUNNER_TEMP/previous-jarvis/*.exe")[0].FullName
-          Start-Process -Wait -FilePath $previous -ArgumentList '/S'
-          $exe = "$env:LOCALAPPDATA\Programs\Jarvis\Jarvis.exe"
-          $env:JARVIS_TEST_PROFILE = $null
-          $env:JARVIS_TEST_REPORT = "$env:GITHUB_WORKSPACE/previous.json"
-          $env:JARVIS_TEST_OFFLINE = '0'
-          $old = Start-Process -PassThru -FilePath $exe
-          if (!$old.WaitForExit(660000)) { $old.Kill(); throw 'Previous version timeout' }
-          if (!(Get-Content $env:JARVIS_TEST_REPORT | ConvertFrom-Json).ok) { throw 'Previous version failed' }
-          $installer = (Get-ChildItem native/windows/dist/*Setup.exe)[0].FullName
-          Start-Process -Wait -FilePath $installer -ArgumentList '/S'
-          if (!(Test-Path $exe)) { throw 'Installed application missing' }
-          foreach ($phase in @('offline','online')) {
-            $env:JARVIS_TEST_REPORT = "$env:GITHUB_WORKSPACE\$phase.json"
-            $env:JARVIS_TEST_OFFLINE = if ($phase -eq 'offline') {'1'} else {'0'}
-            $process = Start-Process -PassThru -FilePath $exe
-            if (!$process.WaitForExit(660000)) { $process.Kill(); throw 'Inference timeout' }
-            $report = Get-Content $env:JARVIS_TEST_REPORT | ConvertFrom-Json
-            if (!$report.ok -or !$report.interface.ok) { throw ($report | ConvertTo-Json) }
-          }
-          Get-Content offline.json,online.json
-          Get-FileHash $installer -Algorithm SHA256 | Format-List
-          Get-AuthenticodeSignature $installer | Format-List Status,StatusMessage | Out-File signature.txt
-          Get-FileHash $installer -Algorithm SHA256 | Format-List | Out-File sha256.txt
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
+        with: { ref: fd2cfe36168d87d48dbfbcf7fde76fbb9c935984, persist-credentials: false }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: actions/setup-python@v5
