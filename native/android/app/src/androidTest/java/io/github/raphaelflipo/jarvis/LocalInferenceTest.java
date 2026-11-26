@@ -75,7 +75,7 @@ public class LocalInferenceTest {
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').click()",null));
         AtomicReference<Boolean> ready=new AtomicReference<>(false);
         for(int i=0;i<120 && !ready.get();i++) {
-            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').textContent === 'Modèle chargé'",v->ready.set("true".equals(v))));
+            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('status').dataset.state === 'ready'",v->ready.set("true".equals(v))));
             Thread.sleep(1000);
         }
         assertTrue("Le modèle doit être chargé dans l'interface",ready.get());
@@ -84,7 +84,7 @@ public class LocalInferenceTest {
         getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').click()",null));
         ready.set(false);
         for(int i=0;i<120 && !ready.get();i++) {
-            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('load-model').textContent === 'Modèle chargé'",v->ready.set("true".equals(v))));
+            getInstrumentation().runOnMainSync(()->web.evaluateJavascript("document.getElementById('status').dataset.state === 'ready'",v->ready.set("true".equals(v))));
             Thread.sleep(1000);
         }
         assertTrue("L'interface doit recharger le modèle hors ligne",ready.get());

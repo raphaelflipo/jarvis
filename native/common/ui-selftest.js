@@ -5,7 +5,7 @@
   const history=JSON.parse(localStorage.getItem('jarvis-local-history-v1')||'[]');
   if(history.length!==40)throw Error('Historique perdu dans l’interface');
   document.getElementById('load-model').click();
-  await wait(()=>document.getElementById('load-model').textContent==='Modèle chargé');
+  await wait(()=>document.getElementById('status').dataset.state === 'ready');
   const prompt=document.getElementById('prompt');prompt.value='Say hello in one short sentence.';prompt.dispatchEvent(new Event('input',{bubbles:true}));
   const send=document.getElementById('send-button');if(send.disabled)throw Error('Envoi désactivé');send.click();
   await wait(()=>document.querySelectorAll('#messages .message').length>=42 && document.getElementById('stop-button').hidden);
