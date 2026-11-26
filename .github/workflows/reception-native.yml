@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: fdaa83496629bf3f16859984470eca49a36b154c, persist-credentials: false }
+        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
       - run: python3 -m pip install pillow
@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: fdaa83496629bf3f16859984470eca49a36b154c, persist-credentials: false }
+        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: '24' }
       - uses: actions/setup-python@v5
@@ -94,7 +94,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-        with: { ref: fdaa83496629bf3f16859984470eca49a36b154c, persist-credentials: false }
+        with: { ref: 6e9ff61e50f0f08013710830341313b12ad3e250, persist-credentials: false }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: actions/setup-python@v5
