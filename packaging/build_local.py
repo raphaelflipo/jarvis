@@ -40,6 +40,7 @@ REQUIRED_FILES = frozenset({
     "inference-worker.js",
     "manifest.webmanifest",
     "models.js",
+    "download.js",
     "package.json",
     "styles.css",
     "sw.js",

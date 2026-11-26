@@ -42,8 +42,8 @@ function serviceWorker({ missingAsset } = {}) {
     entries = new Map();
     async addAll(references) {
       const resolved = await Promise.all(references.map(async reference => {
-        if (reference === missingAsset) throw new Error('Simulated interrupted asset download');
-        await localAsset(reference);
+        if (missingAsset && absolute(reference) === absolute(missingAsset)) throw new Error('Simulated interrupted asset download');
+        await localAsset(reference.url ?? reference);
         const url = absolute(reference);
         downloaded.push(url);
         return [url, new Response(`Offline asset: ${url}`)];
@@ -68,7 +68,7 @@ function serviceWorker({ missingAsset } = {}) {
     async delete(name) { return stores.delete(name); },
   };
   vm.runInNewContext(swSource, {
-    URL,
+    URL, Request,
     caches,
     fetch: async request => {
       networkRequests.push(absolute(request));
@@ -164,9 +164,11 @@ test('manifest and HTML assets work from a GitHub Pages subdirectory', async () 
   assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
   for (const icon of manifest.icons) await localAsset(icon.src);
-  const references = [...html.matchAll(/<(?:link|script)\b[^>]*\b(?:href|src)=["']([^"']+)["']/gi)].map(match => match[1]);
+  const resources = [...html.matchAll(/<(?:link|script)\b[^>]*>/gi)]
+    .map(match => match[0]).filter(tag => !/rel=["'](?:canonical|alternate)["']/i.test(tag));
+  const references = resources.map(tag => tag.match(/(?:href|src)=["']([^"']+)["']/i)?.[1]).filter(Boolean);
   assert.ok(references.length > 0);
-  for (const reference of references) await localAsset(reference);
+  for (const reference of references) await localAsset(reference.url ?? reference);
 });
 
 test('content policy prevents remote scripts and arbitrary inline JavaScript', () => {
@@ -184,22 +186,20 @@ test('content policy prevents remote scripts and arbitrary inline JavaScript', (
   assert.doesNotMatch(html, /\son(?:click|load|error|submit)\s*=/i);
 });
 
-test('service worker installation caches the complete local inference engine', async () => {
+test('service worker installation caches the shell and defers inference assets', async () => {
   const sw = serviceWorker();
   await sw.lifecycle('install');
   for (const file of [
     './', 'index.html', 'styles.css', 'app.js', 'models.js', 'inference-worker.js',
     'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
-    'vendor/transformers.min.js', 'vendor/ort-wasm-simd-threaded.jsep.mjs',
-    'vendor/ort-wasm-simd-threaded.jsep.wasm',
   ]) {
-    assert.ok(sw.downloaded.includes(absolute(file)), `Not available after an offline restart: ${file}`);
+    assert.ok(sw.downloaded.includes(absolute(file)), `Not available after an offline shell restart: ${file}`);
   }
-  assert.ok(sw.downloaded.every(url => url.startsWith(base.href)));
+  assert.ok(sw.downloaded.every(url => url.startsWith(base.href) && !url.includes('/vendor/')));
 });
 
 test('an incomplete app download rejects service worker installation', async () => {
-  const sw = serviceWorker({ missingAsset: './vendor/ort-wasm-simd-threaded.jsep.wasm' });
+  const sw = serviceWorker({ missingAsset: './app.js' });
   await assert.rejects(sw.lifecycle('install'), /interrupted asset download/);
   assert.equal(sw.claimed, false);
 });
@@ -207,7 +207,7 @@ test('an incomplete app download rejects service worker installation', async () 
 test('offline reload and worker runtime use the cache without a network request', async () => {
   const sw = serviceWorker();
   await sw.lifecycle('install');
-  for (const file of ['./?installed=1', 'app.js', 'inference-worker.js', 'vendor/ort-wasm-simd-threaded.jsep.wasm']) {
+  for (const file of ['./?installed=1', 'app.js', 'inference-worker.js']) {
     const result = sw.fetch(file, { mode: file.startsWith('./?') ? 'navigate' : 'cors' });
     assert.equal(result.intercepted, true);
     assert.ok((await result.response) instanceof Response);
