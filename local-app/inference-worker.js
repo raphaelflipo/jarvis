@@ -1,4 +1,5 @@
 import { AutoTokenizer, AutoModelForCausalLM, TextStreamer, env } from './vendor/transformers.min.js';
+import { prepareWeights } from './download.js';
 import { MODEL_CACHE, MODELS, boundedHistory } from './models.js';
 
 // No prompt, response or history is sent to a server. Only public model files are fetched.
@@ -8,12 +9,19 @@ env.useCustomCache = true;
 env.backends.onnx.wasm.numThreads = 1;
 env.backends.onnx.wasm.proxy = false;
 env.backends.onnx.wasm.wasmPaths = new URL('./vendor/', import.meta.url).href;
-let cacheFailed = false;
+let storageWarning = false;
+function warnStorage() {
+  if (!storageWarning) postMessage({ type: 'cache-warning' });
+  storageWarning = true;
+}
 env.customCache = {
-  async match(request) { return (await caches.open(MODEL_CACHE)).match(request); },
+  async match(request) {
+    try { return await (await caches.open(MODEL_CACHE)).match(request); }
+    catch { warnStorage(); return undefined; }
+  },
   async put(request, response) {
     try { await (await caches.open(MODEL_CACHE)).put(request, response); }
-    catch (error) { cacheFailed = true; postMessage({ type: 'cache-warning' }); throw error; }
+    catch { warnStorage(); }
   },
 };
 let tokenizer, model, modelKey, busy = false;
@@ -28,13 +36,14 @@ self.onmessage = async ({ data }) => {
       modelKey = data.key;
       env.allowLocalModels = Boolean(data.offline);
       env.allowRemoteModels = !data.offline;
-      cacheFailed = false;
+      storageWarning = false;
       const options = { revision: selected.revision, local_files_only: data.offline,
         progress_callback: p => { if (p.status === 'progress') send('progress', { file: p.file, loaded: p.loaded, total: p.total, progress: p.progress }); } };
+      if (!data.offline) await prepareWeights(data.key, p => send('progress', p));
       tokenizer = await AutoTokenizer.from_pretrained(selected.id, options);
       tokenizer.truncation_side = 'left';
       model = await AutoModelForCausalLM.from_pretrained(selected.id, { ...options, device: 'wasm', dtype: 'q8' });
-      send('ready', { cached: !cacheFailed });
+      send('ready');
     } else if (data.type === 'generate') {
       if (!model || !tokenizer) throw new Error('Chargez d’abord un modèle.');
       const history = boundedHistory(data.messages);
@@ -49,7 +58,7 @@ self.onmessage = async ({ data }) => {
       const sampling = modelKey === 'balanced' ? { do_sample: true, temperature: 0.7, top_p: 0.8, top_k: 20 } : { do_sample: false };
       const output = await model.generate({ ...inputs, ...sampling, max_new_tokens: 192, repetition_penalty: 1.08, streamer });
       const generated = output.tolist()[0].slice(inputs.input_ids.dims[1]);
-      send('done', { text: tokenizer.decode(generated, { skip_special_tokens: true }), seconds: (performance.now() - start) / 1000 });
+      send('done', { text: tokenizer.decode(generated, { skip_special_tokens: true }), seconds: (performance.now() - start) / 1000, tokens: generated.length });
     }
   } catch (error) {
     send('error', { message: String(error.message || error).slice(0, 500), phase: data.type });

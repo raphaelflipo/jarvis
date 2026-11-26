@@ -36,9 +36,16 @@ La première visite télécharge les fichiers depuis GitHub Pages ; le télécha
 
 Tous les fichiers HTML/CSS/JS sont modifiables. Aucun assemblage n’est nécessaire : le moteur est inclus dans `vendor/`. Servir ce répertoire avec HTTPS ou, pour le développement, `python3 -m http.server 18765 --bind 127.0.0.1 --directory local-app` depuis la racine du dépôt. L’ouverture directe en `file://` ne fonctionne pas avec les workers/service workers.
 
-Tests : `node --test tests/test_local_app.mjs` depuis la racine. Une copie complète de `local-app/` peut être déposée dans un sous-dossier d’un site statique. Conserver tous les fichiers, y compris les fichiers `.wasm`, les licences et le service worker. À chaque modification des fichiers distribués, incrémenter la version du cache dans `sw.js`. Les modèles ne sont pas inclus dans l’archive source.
+Depuis ce dossier, `npm test` exécute les tests du cache et du service worker sans installation de dépendances. Pour publier l’application sur un site statique, conserver ensemble les fichiers `.wasm`, les licences et le service worker. Dans `sw.js`, mettre à jour le nom du cache de l’interface après une modification distribuée et celui du moteur seulement après un changement de version du moteur. Les modèles sont téléchargés à la demande.
 
 Moteur : Transformers.js 3.8.1 et ONNX Runtime Web 1.22.0-dev.20250409-89f8206ba4 (version fournie par ce paquet Transformers.js), WASM mono-thread, sans WebGPU obligatoire. Fichiers pris dans le paquet officiel npm `@huggingface/transformers@3.8.1`, avec `transformers.min.js`, `ort-wasm-simd-threaded.jsep.mjs` et `.wasm`. La version exacte et les révisions des modèles sont définies dans `models.js`.
+
+## Version web bilingue
+
+- Ouvrir `?lang=fr` ou `?lang=en` pour choisir la langue de l’interface. Le choix est conservé dans le navigateur. La conversation et les modèles déjà stockés sont accessibles dans les deux langues.
+- L’interface se place en cache dès la première visite. Les 22 528 676 octets du moteur sont récupérés lors du premier chargement du modèle. Le service worker réutilise les fichiers moteur de la version web précédente s’ils sont encore présents.
+- Une relance réutilise les fichiers complets déjà enregistrés. Les poids ONNX peuvent reprendre au premier bloc manquant de 4 Mio sur un serveur exposant Content-Range, dans un navigateur disposant de CacheStorage et de Web Locks. Le modèle complet entre dans son cache seulement après assemblage. Sans support des plages, le prochain essai télécharge le fichier entier. L’état « Prêt hors ligne » requiert le modèle et les fichiers du moteur en cache. Le navigateur peut retirer ces fichiers s’il libère de l’espace.
+- La recommandation emploie le signal approximatif de mémoire quand le navigateur le fournit. La vitesse affichée correspond au nombre de tokens produits par le moteur divisé par la durée de génération. Elle varie selon le modèle, la demande et l’appareil.
 
 ## Licences et références
 

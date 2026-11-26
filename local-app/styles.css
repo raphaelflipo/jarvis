@@ -322,3 +322,24 @@ textarea:focus-visible { outline: none; }
   .ambient { display: none; }
   .status::before, .tiny-dot, .conversation-dot { background: CanvasText; }
 }
+
+.language-link {
+  flex: 0 0 auto;
+  text-decoration: none;
+}
+
+.setup-card #device-advice {
+  margin: 10px 0 8px;
+  padding: 8px 10px;
+  min-block-size: calc(3lh + 16px);
+  color: var(--ink);
+  background: var(--grass-light);
+  border-radius: 8px;
+}
+
+.setup-card #model-help { margin-bottom: 8px; }
+.setup-card #model-note { margin: 0 0 13px; min-block-size: 2lh; }
+
+@media (max-width: 760px) {
+  .glass-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
