@@ -1,4 +1,4 @@
-const CACHE = 'jarvis-local-shell-3.3.0-rc.2-web.3';
+const CACHE = 'jarvis-local-shell-3.3.0-rc.2-web.4';
 const LEGACY_SHELLS = ['jarvis-local-shell-3.3.0-rc.2', 'jarvis-local-shell-3.3.0-rc.2-web.1'];
 const ENGINE = 'jarvis-local-engine-onnx-1.22.0-dev.20250409-89f8206ba4';
 const FILES = [
