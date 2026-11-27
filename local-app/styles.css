@@ -343,3 +343,18 @@ textarea:focus-visible { outline: none; }
 @media (max-width: 760px) {
   .glass-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
+
+:root {
+  --page: #edeef8; --ink: #24233f; --muted: #585675; --subtle: #666382;
+  --grass: #6754ab; --grass-dark: #4b398e; --grass-light: #e8e3f8;
+  --line: #50448029; --glass: #ffffffbd;
+}
+body { background: radial-gradient(ellipse at 75% 0%, #dcd5f2, transparent 55%), var(--page); }
+.conversation { border-block-start: 3px solid var(--grass); }
+.conversation-header { gap: .5rem; }
+.composer { border-radius: 1rem; }
+:is(.button, .icon-button, .send-button) { min-height: 44px; }
+@media (max-width: 720px) {
+  .conversation { width: 100%; }
+  .composer-area { padding-bottom: max(.65rem, env(safe-area-inset-bottom)); }
+}
