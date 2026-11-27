@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
 
 const scope = 'https://example.test/jarvis/app/';
-const shell = 'jarvis-local-shell-3.3.0-rc.2-web.3';
+const shell = 'jarvis-local-shell-3.3.0-rc.2-web.4';
 const previous = 'jarvis-local-shell-3.3.0-rc.2-web.1';
 const modelCache = 'jarvis-local-models-v1';
 const engineFiles = [
